@@ -1,0 +1,89 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="../bower_components/gold-ip-input/gold-ip-input.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../bower_components/paper-radio-group/paper-radio-group.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<!--link rel="import" href="../bower_components/iron-ajax/iron-ajax.html"-->
+
+<dom-module id="my-4g">
+	<template>
+		<style include="shared-styles">
+			:host {
+				display: block;
+				padding: 10px;
+			}
+		</style>
+		<!--iron-ajax
+			id="update4g"
+			url="http://192.168.1.6:8999/api/update4g"
+			method="post"
+			content-type="application/json"
+			params='{}'
+			handle-as="json"
+			on-response="handleResponse"
+			on-error="handleError"
+			last-response="{{config}}">
+		</iron-ajax-->
+		<h1>Configure 4G interface [[name]]</h1>
+		<paper-toggle-button>Enabled</paper-toggle-button>
+		<div class="card">
+			 4G mode: <paper-radio-group selected="{{mode}}">
+				<paper-radio-button name="ndis">NDIS</paper-radio-button>
+			</paper-radio-group>
+			<template is="dom-if" if="[[_isMode('ndis', mode)]]">
+				<h3>setup 4G modem (NDIS driver):</h3>
+				<paper-checkbox checked disabled>DHCP</paper-checkbox>
+			</template>
+		</div>
+		<div><paper-button raised on-tap="submitConfig">Apply settings</paper-button></div>
+	</template>
+
+	<script>
+		Polymer({
+			is: 'my-4g',
+
+			_isMode: function(val, mode) {
+				return mode === val;
+			},
+
+			handleResponse: function(event) {
+			},
+
+			handleError: function(event) {
+				this.error = event.detail.request.xhr.response;
+			},
+
+			submitConfig: function() {
+				this.$.updateWiFi.generateRequest();
+			},
+
+			properties: {
+				name: {
+					type: String,
+				},
+				interfaceType: {
+					type: String,
+				},
+				mode: {
+					type: String,
+					value: "ndis"
+				},
+				enabled: {
+					type: String,
+					value: false,
+				},
+				config: {
+					type: Object,
+					value: {
+						dhcp: true,
+					}
+				},
+			}
+		});
+	</script>
+</dom-module>

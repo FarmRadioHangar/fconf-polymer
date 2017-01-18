@@ -1,0 +1,178 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="../bower_components/gold-ip-input/gold-ip-input.html">
+
+<dom-module id="ip-with-mask-input">
+	<template>
+		<style include="shared-styles">
+			:host {
+				display: block;
+				padding: 10px;
+				border: 1px dotted gray;
+			}
+		</style>
+
+		<div>
+			<gold-ip-input id="address" label="IP address" value="{{ipAddress}}"></gold-ip-input>
+			<gold-ip-input id="mask" label="network mask" value="{{networkMask}}"></gold-ip-input>
+		</div>
+	</template>
+
+	<script>
+		function ipMaskDottedToInt( net_mask ) {
+			net_mask = net_mask.split('.').map(function (chunk) { return parseInt(chunk) }).join('.');
+			switch(net_mask) {
+				case "0.0.0.0":
+					return "0";
+				case "128.0.0.0":
+					return "1";
+				case "192.0.0.0":
+					return "2";
+				case "224.0.0.0":
+					return "3";
+				case "240.0.0.0":
+					return "4";
+				case "248.0.0.0":
+					return "5";
+				case "252.0.0.0":
+					return "6";
+				case "254.0.0.0":
+					return "7";
+				case "255.0.0.0":
+					return "8";
+				case "255.128.0.0":
+					return "9";
+				case "255.192.0.0":
+					return "10";
+				case "255.224.0.0":
+					return "11";
+				case "255.240.0.0":
+					return "12";
+				case "255.248.0.0":
+					return "13";
+				case "255.252.0.0":
+					return "14";
+				case "255.254.0.0":
+					return "15";
+				case "255.255.0.0":
+					return "16";
+				case "255.255.128.0":
+					return "17";
+				case "255.255.192.0":
+					return "18";
+				case "255.255.224.0":
+					return "19";
+				case "255.255.240.0":
+					return "20";
+				case "255.255.248.0":
+					return "21";
+				case "255.255.252.0":
+					return "22";
+				case "255.255.254.0":
+					return "23";
+				case "255.255.255.0":
+					return "24";
+				case "255.255.255.128":
+					return "25";
+				case "255.255.255.192":
+					return "26";
+				case "255.255.255.224":
+					return "27";
+				case "255.255.255.240":
+					return "28";
+				case "255.255.255.248":
+					return "29";
+				case "255.255.255.252":
+					return "30";
+				case "255.255.255.254":
+					return "31";
+				case "255.255.255.255":
+					return "32";
+				default:
+					return '';
+			}
+		}
+		function ipMaskIntToDotted( mask_bits ) {
+			var bytes = Math.trunc(mask_bits / 8);
+			var lastByte = mask_bits % 8;
+			var net_mask = [0,0,0,0];
+			for (var i = 0; i < bytes; i++) {
+				net_mask[i] = 255;
+			}
+			if (bytes < 4 && lastByte) {
+				net_mask[i] = 255 - (255 >>> (lastByte));
+			}
+			return net_mask.join('.');
+		}
+
+		Polymer({
+			is: 'ip-with-mask-input',
+
+			properties: {
+				ipWithMask: {
+					type: String,
+					observer: '_ipWithMaskChanged',
+					notify: true,
+				},
+				ipAddress: {
+					type: String,
+					observer: '_ipAddressChanged',
+//					notify: true,
+				},
+				networkMask: {
+					type: String,
+					observer: '_networkMaskChanged',
+//					notify: true,
+				},
+				//todo: use some behavior for this
+				required: {
+					type: Boolean,
+					value: false,
+					observer: 'validate',
+				},
+			},
+
+			_maskBits: false,
+			_ipWithMaskChanged() {
+				console.log('_ipWithMaskChanged');
+				if (this.ipWithMask) {
+					var ip = this.ipWithMask.split('/');
+					this.ipAddress = ip[0];
+					this.networkMask = ipMaskIntToDotted(ip[1]);
+					if (!this.validate()) {
+						console.error('invalid value for property ip-with-mask:', this.ipWithMask);
+						//throw "invalid value for property ip-with-mask";
+					} else {
+						this._maskBits = ip[1];
+					}
+				} else {
+					this.ipAddress = '';
+					this._maskBits = '';
+					this.networkMask = '';
+				}
+			},
+			_ipAddressChanged() {
+				this.validate();
+			},
+			_networkMaskChanged() {
+				this._maskBits = ipMaskDottedToInt(this.networkMask);
+				this.validate();
+			},
+			validate() {
+				//todo: validate if specified ip address is not reserved for network or broadcast
+				this.$.address.required = this.required || !!this.networkMask;
+				this.$.address.invalid = !this.$.address.validate();
+				this.$.mask.invalid = !(!this.required && !this.ipAddress && !this.networkMask) && !this._maskBits;
+				if (!this.$.mask.invalid && !this.$.address.invalid) {
+					if (this._maskBits) {
+						this.ipWithMask = [this.ipAddress, this._maskBits].join('/');
+					} else {
+						this.ipWithMask = null;
+					}
+					return true;
+				}
+				return false;
+			},
+		});
+	</script>
+</dom-module>

@@ -1,0 +1,81 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/gold-ip-input/gold-ip-input.html">
+<link rel="import" href="../bower_components/uniflow-polymer/model-view.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="ip-with-mask-input.html">
+
+<dom-module id="my-ethernet">
+	<template>
+		<style include="shared-styles">
+			:host {
+				display: block;
+				padding: 10px;
+			}
+		</style>
+		<!--paper-toggle-button disabled=[[_ifaceUsable(status)]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(status, enabled)]]</paper-toggle-button-->
+
+		<div class="card">
+			<paper-checkbox checked={{model.dhcp}}>DHCP client</paper-checkbox>
+			<ip-with-mask-input ip-with-mask="{{model.static.ip}}"></ip-with-mask-input>
+			<template is="dom-repeat" items="[[model.dns-servers]]" >
+				<gold-ip-input id="dns[[index]]" label="DNS [[_humanIndex(index)]]" value="{{item}}"></gold-ip-input>
+				<!--input is="iron-input" label="DNS [[_humanIndex(index)]]" bind-value="{{item}}"></input-->
+				<!--input label="DNS [[_humanIndex(index)]]" value="{{item}}"/-->
+			</template>
+	
+			<gold-ip-input label="Gateway" value="{{model.static.gateway}}"></gold-ip-input>
+			<div>
+				<paper-button raised on-tap="saveModel">Apply changes</paper-button>
+				<paper-button raised on-tap="loadDefaults">Load Defaults</paper-button>
+			</div>
+		</div>
+	</template>
+
+	<script>
+		Polymer({
+			is: 'my-ethernet',
+
+			_humanIndex(index) {
+				return index + 1;
+			},
+
+			behaviors: [
+				UniFlow.StateAware,
+				UniFlow.ModelView
+			],
+			saveAction: 'saveEthernet',
+			//attached() {
+			//	this.fetchModelData();
+			//},
+			_configChanged(changeRecord) {
+				console.log('path: ' + changeRecord.path);
+				console.log('value: ' + changeRecord.value);
+				this.fetchModelData();
+			},
+			fetchModelData() {
+				this.emitAction({
+					type: 'getEthernetModel',
+					path: 'model'
+				});
+			},
+			loadDefaults() {
+				console.log('load defaults');
+			},
+			properties: {
+				config: {
+					type: Object,
+				},
+				status: {
+					type: Object,
+				},
+				enabled: {
+					type: Boolean,
+					value: false
+				}
+			},
+			observers: [
+				'_configChanged(config.*)'
+			],
+		});
+	</script>
+</dom-module>

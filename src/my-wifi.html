@@ -1,0 +1,153 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="ip-with-mask-input.html">
+<link rel="import" href="../bower_components/gold-ip-input/gold-ip-input.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../bower_components/paper-radio-group/paper-radio-group.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<!--link rel="import" href="../bower_components/iron-ajax/iron-ajax.html"-->
+<link rel="import" href="../bower_components/uniflow-polymer/state-aware.html">
+<link rel="import" href="../bower_components/uniflow-polymer/action-emitter.html">
+
+<dom-module id="my-wifi">
+	<template>
+		<style include="shared-styles">
+			:host {
+				display: block;
+				padding: 10px;
+			}
+		</style>
+		<!--iron-ajax
+			id="updateWiFi"
+			url="/fconf/updateWiFi"
+			method="POST"
+			content-type="application/json"
+			handle-as="json"
+			on-response="handleResponse"
+			on-error="handleError"
+			last-response="{{config}}">
+		</iron-ajax-->
+		<paper-toggle-button disabled=[[_ifaceUsable(status)]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(status, enabled)]]</paper-toggle-button>
+		<div class="card">
+			Wi-Fi mode: <paper-radio-group selected="{{mode}}">
+				<paper-radio-button name="client">client</paper-radio-button>
+				<paper-radio-button name="ap">access point</paper-radio-button>
+			</paper-radio-group>
+			<template is="dom-if" if="[[_isMode('client', mode)]]">
+				<h3>connect to WPA access point:</h3>
+				<paper-input label="SSID" value="[[config.ssid]]"></paper-input>
+				<paper-input minlength=8 label="passphrase" value="[[config.passphrase]]"></paper-input>
+				<h3>network settings:</h3>
+				<ip-with-mask-input ip-with-mask="192.168.1.6/24"></ip-with-mask-input>
+				<gold-ip-input label="Gateway" value="192.168.1.1"></gold-ip-input>
+			</template>
+			<template is="dom-if" if="[[_isMode('ap', mode)]]">
+				<h3>setup WPA access point:</h3>
+				<paper-input id="ap_ssid" label="SSID" value="[[config.ssid]]"></paper-input>
+				<paper-checkbox checked={{config.hidden}}>hide SSID</paper-checkbox>
+				<paper-input id="ap_passphrase" minlength=8 label="passphrase" value="[[config.passphrase]]"></paper-input>
+				<h3>network settings:</h3>
+				<paper-checkbox checked disabled>DHCP server</paper-checkbox>
+				<gold-ip-input label="Gateway" value="192.168.12.1"></gold-ip-input>
+				<gold-ip-input label="Network mask" value="255.255.255.0" readonly></gold-ip-input>
+				<paper-dropdown-menu label="Internet connection sharing">
+					<paper-listbox class="dropdown-content">
+						<paper-item>none</paper-item>
+						<paper-item>ethernet (eth0)</paper-item>
+						<paper-item>4g (eth1)</paper-item>
+						<paper-item>3g (ppp0)</paper-item>
+					</paper-listbox>
+				</paper-dropdown-menu>
+			</template>
+		</div>
+		<div><paper-button raised on-tap="submitConfig">Apply settings</paper-button></div>
+	</template>
+
+	<script>
+		Polymer({
+			is: 'my-wifi',
+
+			_isMode: function(val, mode) {
+				return mode === val;
+			},
+
+			_ifaceStatus: function(status, enabled) {
+				//console.log('_ifaceStatus:');
+				return (this._ifaceUsable(status) && enabled) ? "Enabled" : "Disabled";
+			},
+			_ifaceUsable: function(status) {
+				//console.log('_ifaceUsable:');
+				return !!(status);
+			},
+
+			handleResponse: function(event) {
+			},
+
+			handleError: function(event) {
+				this.error = event.detail.request.xhr.response;
+			},
+
+			_enabledChanged: function (event, element) {
+				console.log('enabledChanged', event, element);
+				this.$.updateWiFi.body = {
+					mode: this.mode,
+					enabled: element.value,
+				};
+				this.$.updateWiFi.generateRequest();
+			},
+			submitConfig: function() {
+				this.$.updateWiFi.body = {
+					mode: this.mode,
+					config: {
+						ssid: this.$$('#ap_ssid').value,
+						passphrase: this.$$('#ap_passphrase').value,
+						hidden: this.config.hidden
+					}
+				};
+
+				this.$.updateWiFi.generateRequest();
+			},
+
+			properties: {
+				name: {
+					type: String,
+				},
+				mode: {
+					type: String,
+				},
+				enabled: {
+					type: Boolean,
+					value: false,
+				//	observer: '_enabledChanged'
+				},
+				config: {
+					type: Object,
+					value: function() {
+						return null;
+					}
+				},
+				status: {
+					type: Object,
+					value: function() {
+						return null;
+					}
+				}
+			},
+
+			observers: [
+				'configChanged(config.*)',
+			],
+			behaviors: [
+				UniFlow.ModelView
+			],
+			configChanged: function(changeRecord) {
+				//console.log('path: ', changeRecord.path);
+				//console.log('value: ', changeRecord.value);
+			},
+		});
+	</script>
+</dom-module>

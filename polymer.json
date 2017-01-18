@@ -1,0 +1,22 @@
+{
+  "entrypoint": "index.html",
+  "shell": "src/my-app.html",
+  "fragments": [
+    "src/my-interface.html",
+    "src/my-ethernet.html",
+    "src/ip-with-mask-input.html",
+    "src/my-3g.html",
+    "src/my-4g.html",
+    "src/my-wifi.html",
+    "src/my-view404.html"
+  ],
+  "sourceGlobs": [
+    "src/**/*",
+    "images/**/*",
+    "bower.json"
+  ],
+  "includeDependencies": [
+    "manifest.json",
+    "bower_components/webcomponentsjs/webcomponents-lite.min.js"
+  ]
+}

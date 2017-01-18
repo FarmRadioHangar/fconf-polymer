@@ -1,10 +1,9 @@
 bower_components
-static
+images
 node_modules
 test
 run
 trash
 log
-pipes
 *.log
 .*.swp

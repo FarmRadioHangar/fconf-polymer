@@ -1,0 +1,89 @@
+<link rel="import" href="../bower_components/uniflow-polymer/action-dispatcher.html">
+<link rel="import" href="../bower_components/web-socket/web-socket.html">
+
+<dom-module id="my-action-dispatcher">
+	<template>
+		<web-socket id="webSocket"
+				auto json
+				on-open="_onWsOpen"
+				on-close="_onWsClose"
+				on-message="_onWsMessage"
+				on-error="_onWsError">
+		</web-socket>
+	</template>
+
+	<script>
+		var x = Polymer({
+			is: 'my-action-dispatcher',
+
+			ready() {
+				this.$.webSocket.url = "ws://" + window.location.host + "/ws";
+			},
+			behaviors: [
+				UniFlow.ActionDispatcher,
+				UniFlow.StateAware,
+				UniFlow.StateMutator,
+			],
+
+			getEthernetModel(detail) {
+				let stateRoot = detail.path.replace(/\.[^/.]+$/, "");
+				this.set(detail.path, this.get([stateRoot, 'config']));
+				console.log('getModel', detail.path, this.get(detail.path));
+			},
+
+			saveEthernet(detail) {
+				console.log('saveEthernet', detail.model);
+				this.$.webSocket.send(JSON.stringify({ updateEthernet: {
+					config: detail.model,
+					name: detail.model.interface,
+				}}));
+			},
+			save_wifi(detail) {
+			},
+			save_3g(detail) {
+			},
+			save_4g(detail) {
+			},
+
+			// websocket handlers
+			_onWsError(error) {
+				console.error('websocket error', error);
+			},
+			_onWsOpen() {
+				console.log('websocket open');
+			},
+			_onWsClose() {
+				console.log('websocket closed');
+			},
+			_onWsMessage(message) {
+				console.log('websocket message', message);
+				Object.keys(message.detail).forEach(function(key) {
+					var fCall = '_' + key;
+					if (typeof this[fCall] !== 'function') {
+						console.error('invalid incoming key', key);
+					} else {
+						this[fCall](message.detail[key]);
+						console.log('ws-in', '<<<<==', key);
+					}
+				}.bind(this));
+			},
+			_interfaceInit(interfaces) {
+				this.set('state', {
+					interfaces: interfaces,
+					deviceList: Object.keys(interfaces).map(function(key) {
+						return {
+							name: key,
+							type: interfaces[key].type,
+						};
+					})
+				});
+			},
+			_interfaceUpdate(interfaces) {
+				Object.keys(interfaces).forEach(function(key) {
+					this.set(['state.interfaces', key], interfaces[key]);
+				}.bind(this));
+			},
+		});
+	</script>
+</dom-module>
+

@@ -1,0 +1,58 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="my-ethernet.html">
+<link rel="import" href="my-wifi.html">
+<link rel="import" href="my-4g.html">
+
+<dom-module id="my-interface">
+	<template>
+		<style include="shared-styles">
+			:host {
+				display: block;
+				padding: 10px;
+			}
+		</style>
+		<h1>Configure [[_interfaceType(interfaceType)]] interface [[name]]</h1>
+		<!--paper-toggle-button disabled=[[_ifaceUsable(status)]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(status, enabled)]]</paper-toggle-button-->
+
+	</template>
+	<script>
+		Polymer({
+			is: 'my-interface',
+			behaviors: [
+				UniFlow.StateAware,
+			],
+			
+			_interfaceType(type) {
+				switch (type) {
+					case "wifi":
+						return "Wi-Fi";
+					default:
+						return type;
+				}
+			},
+			_checkType(type, value) {
+				return type === value;
+			},
+			ready() {
+					var myElement = document.createElement('my-' + this.interfaceType);
+					myElement.name = this.name;
+					myElement.statePath = "state.interfaces." + this.name;
+					//myElement.config = this.get("state.interfaces." + this.name + ".config");
+					//console.log('my interface ready', myElement.config, this.get("state.interfaces." + this.name));
+					
+					Polymer.dom(this.root).appendChild(myElement);
+			},
+		});
+	</script>
+</dom-module>
