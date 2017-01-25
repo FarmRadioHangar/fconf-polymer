@@ -1,89 +1,127 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="shared-styles.html">
 <link rel="import" href="../bower_components/gold-ip-input/gold-ip-input.html">
-<link rel="import" href="../bower_components/paper-input/paper-input.html">
-<link rel="import" href="../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
-<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
-<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
-<link rel="import" href="../bower_components/paper-radio-group/paper-radio-group.html">
-<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
-<!--link rel="import" href="../bower_components/iron-ajax/iron-ajax.html"-->
+<link rel="import" href="../bower_components/uniflow-polymer/model-view.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="ip-with-mask-input.html">
 
 <dom-module id="my-4g">
 	<template>
 		<style include="shared-styles">
 			:host {
 				display: block;
-				padding: 10px;
 			}
 		</style>
-		<!--iron-ajax
-			id="update4g"
-			url="http://192.168.1.6:8999/api/update4g"
-			method="post"
-			content-type="application/json"
-			params='{}'
-			handle-as="json"
-			on-response="handleResponse"
-			on-error="handleError"
-			last-response="{{config}}">
-		</iron-ajax-->
-		<h1>Configure 4G interface [[name]]</h1>
-		<paper-toggle-button>Enabled</paper-toggle-button>
+		ON/OFF
+		<paper-toggle-button disabled=[[!_ifaceUsable(status)]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(status, enabled)]]</paper-toggle-button>
 		<div class="card">
-			 4G mode: <paper-radio-group selected="{{mode}}">
-				<paper-radio-button name="ndis">NDIS</paper-radio-button>
-			</paper-radio-group>
-			<template is="dom-if" if="[[_isMode('ndis', mode)]]">
-				<h3>setup 4G modem (NDIS driver):</h3>
-				<paper-checkbox checked disabled>DHCP</paper-checkbox>
+			<template is="dom-if" if="[[status.isModified]]">
+				<div class="notification">You have unsaved changes</div>
 			</template>
+			<template is="dom-if" if="[[_isMode('ndis', mode)]]">
+				<h3>NDIS driver</h3>
+				<div><paper-checkbox checked={{model.dhcp}} disabled>DHCP client</paper-checkbox></div>
+				<div><paper-checkbox checked={{model.sharing}}>Allow sharing</paper-checkbox></div>
+			</template>
+			<div>
+				<paper-button raised on-tap="onSaveTap" disabled=[[!status.isModified]]>Apply changes</paper-button>
+				<paper-button raised on-tap="discardChanges" disabled=[[!status.isModified]]>Discard</paper-button>
+				<template is="dom-if" if="[[_hasDefaults(mode)]]">
+					<paper-button raised on-tap="loadDefaults">Load Defaults</paper-button>
+				</template>
+			</div>
 		</div>
-		<div><paper-button raised on-tap="submitConfig">Apply settings</paper-button></div>
 	</template>
 
 	<script>
 		Polymer({
 			is: 'my-4g',
 
+			_humanIndex(index) {
+				return index + 1;
+			},
 			_isMode: function(val, mode) {
 				return mode === val;
 			},
-
-			handleResponse: function(event) {
+			_ifaceStatus: function(status, enabled) {
+				//console.log('_ifaceStatus:');
+				return (this._ifaceUsable(status) && enabled) ? "Enabled" : "Disabled";
+			},
+			_ifaceUsable: function(status) {
+				console.log('_ifaceUsable:', !!(status));
+				return !!(status);
+			},
+			_hasDefaults: function(mode) {
+				return !!this.get(mode).defaults;
+			},
+			onSaveTap() {
+				this.validateAndSave({
+					type: 'interfaceUpdate',
+					name: this.name,
+					enabled: this.enabled,
+				});
+			},
+			_enabledChanged: function (event, element) {
+				console.log('_enabledChanged', event, element);
+				this.emitAction({
+					type: 'interfaceEnable',
+					name: this.name,
+					enabled: element.value
+				});
+				setTimeout(function(value) {
+					if (value !== this.get('enabled')) {
+						this.set('enabled', this.get('enabled'));
+					}
+				}, 3000, element.value);
 			},
 
-			handleError: function(event) {
-				this.error = event.detail.request.xhr.response;
+			behaviors: [
+				UniFlow.ModelView
+			],
+			//attached() {
+			//},
+			discardChanges() {
+				console.log('discardChanges', this.get('config'));
+				this.set('model', JSON.parse(this.get('_model')));
 			},
-
-			submitConfig: function() {
-				this.$.updateWiFi.generateRequest();
+			_configChanged(changeRecord) {
+				this.set('model', Object.assign( {}, this.ndis.config));
+				this.set('_model', JSON.stringify(this.model));
+				console.log('_configChanged', changeRecord.path, changeRecord.value, this.get('model'));
 			},
-
+			loadDefaults() {
+				if (this.ndis.defaults) {
+					this.set('model', this.ndis.defaults);
+					var _defaults = JSON.stringify(this.ndis.defaults);
+					if (this._model !== _defaults) {
+						this.set('status.isModified', true);
+					}
+				}
+				console.log(this.config, this.model, this.status);
+			},
 			properties: {
-				name: {
-					type: String,
+				ndis: {
+					type: Object,
 				},
-				interfaceType: {
-					type: String,
-				},
-				mode: {
-					type: String,
-					value: "ndis"
-				},
-				enabled: {
-					type: String,
+				sharing: {
+					type: Boolean,
 					value: false,
 				},
-				config: {
-					type: Object,
-					value: {
-						dhcp: true,
+				enabled: {
+					type: Boolean,
+//					value: false
+				}
+			},
+			observers: [
+				'_configChanged(ndis.*)',
+			],
+/*			validation: {
+				static: (value) => {
+					if (value.gateway && value.gateway.trim()) {
+						//check if address is in same network with the static-ip
 					}
-				},
-			}
+				}
+			},
+*/
 		});
 	</script>
 </dom-module>

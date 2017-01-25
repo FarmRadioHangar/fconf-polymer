@@ -13,7 +13,7 @@
 	</template>
 
 	<script>
-		var x = Polymer({
+		Polymer({
 			is: 'my-action-dispatcher',
 
 			ready() {
@@ -25,24 +25,22 @@
 				UniFlow.StateMutator,
 			],
 
-			getEthernetModel(detail) {
-				let stateRoot = detail.path.replace(/\.[^/.]+$/, "");
-				this.set(detail.path, this.get([stateRoot, 'config']));
-				console.log('getModel', detail.path, this.get(detail.path));
-			},
-
-			saveEthernet(detail) {
-				console.log('saveEthernet', detail.model);
-				this.$.webSocket.send(JSON.stringify({ updateEthernet: {
+			// actions
+			interfaceUpdate(detail) {
+				this.$.webSocket.send(JSON.stringify({ interfaceUpdate: {
+					name: detail.name,
+					enabled: detail.enabled,
 					config: detail.model,
-					name: detail.model.interface,
+					mode: detail.mode,
 				}}));
+				console.log('interfaceUpdate', detail);
 			},
-			save_wifi(detail) {
-			},
-			save_3g(detail) {
-			},
-			save_4g(detail) {
+			interfaceEnable(detail) {
+				this.$.webSocket.send(JSON.stringify({ interfaceEnable: {
+					name: detail.name, // name of the interface
+					enabled: detail.enabled, // boolean: true to enable, false to disable
+				}}));
+				console.log('interfaceEnable', detail);
 			},
 
 			// websocket handlers
@@ -67,6 +65,8 @@
 					}
 				}.bind(this));
 			},
+
+			//handling of events received by the websocket
 			_interfaceInit(interfaces) {
 				this.set('state', {
 					interfaces: interfaces,
@@ -80,7 +80,23 @@
 			},
 			_interfaceUpdate(interfaces) {
 				Object.keys(interfaces).forEach(function(key) {
-					this.set(['state.interfaces', key], interfaces[key]);
+					if (interfaces[key] !== null) {
+						this.set(['state.interfaces', key], interfaces[key]);
+					} else {
+						delete this.state.interfaces[key];
+					}
+				}.bind(this));
+				interfaces = this.get('state.interfaces');
+				this.set('state.deviceList', Object.keys(interfaces).map(function(key) {
+					return {
+						name: key,
+						type: interfaces[key].type,
+					};
+				}));
+			},
+			_interfaceEnable(interfaces) {
+				Object.keys(interfaces).forEach(function(key) {
+					this.set(['state.interfaces', key, 'enabled'], interfaces[key]);
 				}.bind(this));
 			},
 		});

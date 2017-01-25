@@ -9,24 +9,28 @@
 		<style include="shared-styles">
 			:host {
 				display: block;
-				padding: 10px;
 			}
 		</style>
-		<!--paper-toggle-button disabled=[[_ifaceUsable(status)]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(status, enabled)]]</paper-toggle-button-->
-
+		ON/OFF
+		<paper-toggle-button disabled=[[!_ifaceUsable(status)]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(status, enabled)]]</paper-toggle-button>
 		<div class="card">
-			<paper-checkbox checked={{model.dhcp}}>DHCP client</paper-checkbox>
-			<ip-with-mask-input ip-with-mask="{{model.static.ip}}"></ip-with-mask-input>
-			<template is="dom-repeat" items="[[model.dns-servers]]" >
-				<gold-ip-input id="dns[[index]]" label="DNS [[_humanIndex(index)]]" value="{{item}}"></gold-ip-input>
-				<!--input is="iron-input" label="DNS [[_humanIndex(index)]]" bind-value="{{item}}"></input-->
-				<!--input label="DNS [[_humanIndex(index)]]" value="{{item}}"/-->
+			<template is="dom-if" if="[[status.isModified]]">
+				<div class="notification">You have unsaved changes</div>
+			</template>
+			<paper-checkbox on-checked-changed="_dhcpChanged" checked={{model.dhcp}}>DHCP client</paper-checkbox>
+			<ip-with-mask-input id="staticIP" value="{{model.static.ip}}"></ip-with-mask-input>
+			<template is="dom-repeat" items="{{model.dns-servers}}" >
+				<gold-ip-input on-change="_dnsChanged" id="dns[[index]]" label="DNS [[_humanIndex(index)]]" value="{{item}}"></gold-ip-input>
 			</template>
 	
-			<gold-ip-input label="Gateway" value="{{model.static.gateway}}"></gold-ip-input>
+			<gold-ip-input id="gateway" label="Gateway" value="{{model.static.gateway}}" auto-validate></gold-ip-input>
 			<div>
-				<paper-button raised on-tap="saveModel">Apply changes</paper-button>
-				<paper-button raised on-tap="loadDefaults">Load Defaults</paper-button>
+				<paper-button raised on-tap="onSaveTap" disabled=[[!status.isModified]]>Apply changes</paper-button>
+				<paper-button raised on-tap="discardChanges" disabled=[[!status.isModified]]>Discard</paper-button>
+				<template is="dom-if" if="[[_hasDefaults(defaults)]]">
+					<paper-button raised on-tap="loadDefaults">Load Defaults</paper-button>
+				</template>
+				<!--paper-button raised on-tap="removeConfig">Delete</paper-button-->
 			</div>
 		</div>
 	</template>
@@ -35,47 +39,111 @@
 		Polymer({
 			is: 'my-ethernet',
 
+			onSaveTap() {
+				this.validateAndSave({
+					type: 'interfaceUpdate',
+					name: this.name,
+					enabled: this.enabled,
+				});
+			},
 			_humanIndex(index) {
 				return index + 1;
 			},
+			_dnsChanged(event) {
+				console.log('_dnsChanged', event);
+			},
+			_ifaceStatus: function(status, enabled) {
+				//console.log('_ifaceStatus:');
+				return (this._ifaceUsable(status) && enabled) ? "Enabled" : "Disabled";
+			},
+			_ifaceUsable: function(status) {
+				console.log('_ifaceUsable:', !!(status));
+				return !!(status);
+			},
+			_hasDefaults: function() {
+				return !!this.defaults;
+			},
+			_enabledChanged: function (event, element) {
+				console.log('_enabledChanged', event, element);
+				this.emitAction({
+					type: 'interfaceEnable',
+					name: this.name,
+					enabled: element.value
+				});
+				setTimeout(function(value) {
+					if (value !== this.get('enabled')) {
+						this.set('enabled', this.get('enabled'));
+					}
+				}, 3000, element.value);
+			},
+
+			_dhcpChanged: function (event, element) {
+				console.log('_dhcpChanged', event, element);
+				// workaround for avoiding error thrown when validating uninitialized input
+				if (typeof this.$.staticIP.value === 'string') {
+					this.$.staticIP.required = !element.value;
+					console.log('staic ip required', !element.value);
+				}
+				if (typeof this.$.gateway.value === 'string') {
+					this.$.gateway.invalid = element.value ? false : !this.$.gateway.validate();
+				}
+				this.$.gateway.label = element.value ? "Gateway overridden by DHCP" : "Gateway";
+				this.$.gateway.disabled = element.value;
+			},
 
 			behaviors: [
-				UniFlow.StateAware,
 				UniFlow.ModelView
 			],
-			saveAction: 'saveEthernet',
 			//attached() {
-			//	this.fetchModelData();
 			//},
-			_configChanged(changeRecord) {
-				console.log('path: ' + changeRecord.path);
-				console.log('value: ' + changeRecord.value);
-				this.fetchModelData();
+			discardChanges() {
+				console.log('discardChanges', this.get('config'));
+				this.set('model', JSON.parse(this.get('_model')));
 			},
-			fetchModelData() {
+			removeConfig() {
 				this.emitAction({
-					type: 'getEthernetModel',
-					path: 'model'
+					type: 'removeConfig',
+					name: this.name,
 				});
 			},
+			_configChanged(changeRecord) {
+				this.set('model', this.config);
+				this.set('_model', JSON.stringify(this.model));
+				console.log('_configChanged', changeRecord.path, changeRecord.value, this.get('model'));
+			},
 			loadDefaults() {
-				console.log('load defaults');
+				if (this.defaults) {
+					this.set('model', this.defaults);
+					var _defaults = JSON.stringify(this.defaults);
+					if (this._model !== _defaults) {
+						this.set('status.isModified', true);
+					}
+				}
+				console.log(this.config, this.model, this.status);
 			},
 			properties: {
 				config: {
 					type: Object,
 				},
-				status: {
+				defaults: {
 					type: Object,
 				},
 				enabled: {
 					type: Boolean,
-					value: false
+//					value: false
 				}
 			},
 			observers: [
-				'_configChanged(config.*)'
+				'_configChanged(config.*)',
 			],
+/*			validation: {
+				static: (value) => {
+					if (value.gateway && value.gateway.trim()) {
+						//check if address is in same network with the static-ip
+					}
+				}
+			},
+*/
 		});
 	</script>
 </dom-module>

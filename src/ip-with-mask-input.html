@@ -15,11 +15,13 @@
 		<div>
 			<gold-ip-input id="address" label="IP address" value="{{ipAddress}}"></gold-ip-input>
 			<gold-ip-input id="mask" label="network mask" value="{{networkMask}}"></gold-ip-input>
+			<small>[[value]]</small>
 		</div>
 	</template>
 
 	<script>
 		function ipMaskDottedToInt( net_mask ) {
+			// allow leading zero in ip byte chunks
 			net_mask = net_mask.split('.').map(function (chunk) { return parseInt(chunk) }).join('.');
 			switch(net_mask) {
 				case "0.0.0.0":
@@ -109,7 +111,7 @@
 			is: 'ip-with-mask-input',
 
 			properties: {
-				ipWithMask: {
+				value: {
 					type: String,
 					observer: '_ipWithMaskChanged',
 					notify: true,
@@ -132,15 +134,17 @@
 				},
 			},
 
-			_maskBits: false,
+			_maskBits: '',
 			_ipWithMaskChanged() {
-				console.log('_ipWithMaskChanged');
-				if (this.ipWithMask) {
-					var ip = this.ipWithMask.split('/');
+				console.log('_ipWithMaskChanged', this.value);
+				if (this.value) {
+					var ip = this.value.split('/');
 					this.ipAddress = ip[0];
-					this.networkMask = ipMaskIntToDotted(ip[1]);
+					if (ip[1] || ip[1] === 0) {
+						this.networkMask = ipMaskIntToDotted(ip[1]);
+					}
 					if (!this.validate()) {
-						console.error('invalid value for property ip-with-mask:', this.ipWithMask);
+						console.error('invalid value for property ip-with-mask:', this.value);
 						//throw "invalid value for property ip-with-mask";
 					} else {
 						this._maskBits = ip[1];
@@ -163,15 +167,8 @@
 				this.$.address.required = this.required || !!this.networkMask;
 				this.$.address.invalid = !this.$.address.validate();
 				this.$.mask.invalid = !(!this.required && !this.ipAddress && !this.networkMask) && !this._maskBits;
-				if (!this.$.mask.invalid && !this.$.address.invalid) {
-					if (this._maskBits) {
-						this.ipWithMask = [this.ipAddress, this._maskBits].join('/');
-					} else {
-						this.ipWithMask = null;
-					}
-					return true;
-				}
-				return false;
+				this.value = [this.ipAddress, this._maskBits ? this._maskBits : ''].join('/');
+				return !this.$.mask.invalid && !this.$.address.invalid;
 			},
 		});
 	</script>

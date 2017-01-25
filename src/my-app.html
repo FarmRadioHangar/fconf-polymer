@@ -107,7 +107,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 						role="main">
 					<my-summary name="summary"></my-summary>
 					<template is="dom-repeat" items="[[state.deviceList]]" as="iface">
-						<my-interface interface-type="[[iface.type]]" name="[[iface.name]]"></my-interface>
+						<my-interface interface-type="[[iface.type]]" name="[[iface.name]]" state-path="state.interfaces.[[iface.name]]"></my-interface>
 					</template>
 					<my-view404 name="view404"></my-view404>
 				</iron-pages>

@@ -25,6 +25,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		<h1>Configure [[_interfaceType(interfaceType)]] interface [[name]]</h1>
 		<!--paper-toggle-button disabled=[[_ifaceUsable(status)]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(status, enabled)]]</paper-toggle-button-->
 
+		<template is="dom-if" if="[[_isType('ethernet', interfaceType)]]">
+			<my-ethernet name="[[name]]" config=[[config]] enabled=[[enabled]] defaults=[[defaults]]></my-ethernet>
+		</template>
+		<template is="dom-if" if="[[_isType('wifi', interfaceType)]]">
+			<my-wifi name="[[name]]" mode=[[mode]] ap=[[ap]] client=[[client]] enabled=[[enabled]]></my-wifi>
+		</template>
+		<template is="dom-if" if="[[_isType('4g', interfaceType)]]">
+			<my-4g name="[[name]]" mode=[[mode]] ndis=[[ndis]] enabled=[[enabled]]></my-4g>
+		</template>
+		<template is="dom-if" if="[[_isType('3g', interfaceType)]]">
+			<my-ethernet name="[[name]]" config=[[config]] enabled=[[enabled]] defaults=[[defaults]]></my-ethernet>
+		</template>
+
 	</template>
 	<script>
 		Polymer({
@@ -41,17 +54,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 						return type;
 				}
 			},
-			_checkType(type, value) {
+			_isType(type, value) {
 				return type === value;
 			},
 			ready() {
+				/*
 					var myElement = document.createElement('my-' + this.interfaceType);
 					myElement.name = this.name;
 					myElement.statePath = "state.interfaces." + this.name;
-					//myElement.config = this.get("state.interfaces." + this.name + ".config");
+					myElement.config = this.get(["state.interfaces", this.name, "config"]);
 					//console.log('my interface ready', myElement.config, this.get("state.interfaces." + this.name));
 					
 					Polymer.dom(this.root).appendChild(myElement);
+					*/
 			},
 		});
 	</script>
