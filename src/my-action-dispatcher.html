@@ -42,6 +42,13 @@
 				}}));
 				console.log('interfaceEnable', detail);
 			},
+			interfaceType(detail) {
+				this.$.webSocket.send(JSON.stringify({ interfaceType: {
+					name: detail.name,
+					type: detail.interfaceType,
+				}}));
+				console.log('interfaceType', detail);
+			},
 
 			// websocket handlers
 			_onWsError(error) {

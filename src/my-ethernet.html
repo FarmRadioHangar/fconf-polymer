@@ -74,7 +74,7 @@
 					if (value !== this.get('enabled')) {
 						this.set('enabled', this.get('enabled'));
 					}
-				}, 3000, element.value);
+				}.bind(this), 3000, element.value);
 			},
 
 			_dhcpChanged: function (event, element) {

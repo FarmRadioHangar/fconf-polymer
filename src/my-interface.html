@@ -9,10 +9,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-radio-group/paper-radio-group.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="shared-styles.html">
 <link rel="import" href="my-ethernet.html">
 <link rel="import" href="my-wifi.html">
 <link rel="import" href="my-4g.html">
+<link rel="import" href="my-3g.html">
 
 <dom-module id="my-interface">
 	<template>
@@ -29,13 +32,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			<my-ethernet name="[[name]]" config=[[config]] enabled=[[enabled]] defaults=[[defaults]]></my-ethernet>
 		</template>
 		<template is="dom-if" if="[[_isType('wifi', interfaceType)]]">
-			<my-wifi name="[[name]]" mode=[[mode]] ap=[[ap]] client=[[client]] enabled=[[enabled]]></my-wifi>
+			<my-wifi name="[[name]]" mode=[[mode]] ap=[[ap]] client=[[client]] enabled=[[enabled]] interfaces=[[_filterCurrentInterface(state.deviceList)]]></my-wifi>
 		</template>
 		<template is="dom-if" if="[[_isType('4g', interfaceType)]]">
 			<my-4g name="[[name]]" mode=[[mode]] ndis=[[ndis]] enabled=[[enabled]]></my-4g>
 		</template>
 		<template is="dom-if" if="[[_isType('3g', interfaceType)]]">
-			<my-ethernet name="[[name]]" config=[[config]] enabled=[[enabled]] defaults=[[defaults]]></my-ethernet>
+			<my-3g name="[[name]]" config=[[config]] enabled=[[enabled]] defaults=[[defaults]]></my-3g>
+		</template>
+		<template is="dom-if" if="[[!interfaceType]]">
+			Unknown interface, please specify type <paper-radio-group selected="{{_selected}}">
+				<paper-radio-button name="ethernet">Ethernet</paper-radio-button>
+				<paper-radio-button name="wifi">Wi-Fi</paper-radio-button>
+				<paper-radio-button name="4g">4g modem</paper-radio-button>
+				<paper-radio-button name="3g">3g modem</paper-radio-button>
+			</paper-radio-group>
+		<div>
+			<paper-button raised on-tap="onSaveTap" disabled=[[_selected]]>Save</paper-button>
+		</div>
+
 		</template>
 
 	</template>
@@ -44,6 +59,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			is: 'my-interface',
 			behaviors: [
 				UniFlow.StateAware,
+				UniFlow.ActionEmiter,
 			],
 			
 			_interfaceType(type) {
@@ -54,8 +70,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 						return type;
 				}
 			},
+			_filterCurrentInterface(interfaces) {
+				var filtered = [];
+				interfaces.forEach(function(interface) {
+					if (interface.name !== this.name) {
+						filtered.push(interface);
+					}
+				}.bind(this));
+				return filtered;
+			},
 			_isType(type, value) {
 				return type === value;
+			},
+			onSaveTap() {
+				this.emitAction({
+					type: 'interfaceType',
+					name: this.name,
+					interfaceType: this._selected,
+				});
 			},
 			ready() {
 				/*

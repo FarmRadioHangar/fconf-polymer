@@ -20,7 +20,6 @@
 			<template is="dom-if" if="[[_isMode('ndis', mode)]]">
 				<h3>NDIS driver</h3>
 				<div><paper-checkbox checked={{model.dhcp}} disabled>DHCP client</paper-checkbox></div>
-				<div><paper-checkbox checked={{model.sharing}}>Allow sharing</paper-checkbox></div>
 			</template>
 			<div>
 				<paper-button raised on-tap="onSaveTap" disabled=[[!status.isModified]]>Apply changes</paper-button>
@@ -58,6 +57,7 @@
 					type: 'interfaceUpdate',
 					name: this.name,
 					enabled: this.enabled,
+					mode: 'ndis',
 				});
 			},
 			_enabledChanged: function (event, element) {
@@ -71,7 +71,7 @@
 					if (value !== this.get('enabled')) {
 						this.set('enabled', this.get('enabled'));
 					}
-				}, 3000, element.value);
+				}.bind(this), 3000, element.value);
 			},
 
 			behaviors: [
