@@ -1,16 +1,8 @@
-<!--
-@license
-Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
-
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-radio-group/paper-radio-group.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/uniflow-polymer/state-aware.html">
+<link rel="import" href="../bower_components/uniflow-polymer/action-emitter.html">
 <link rel="import" href="shared-styles.html">
 <link rel="import" href="my-ethernet.html">
 <link rel="import" href="my-wifi.html">
@@ -27,18 +19,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		</style>
 		<h1>Configure [[_interfaceType(interfaceType)]] interface [[name]]</h1>
 		<!--paper-toggle-button disabled=[[_ifaceUsable(status)]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(status, enabled)]]</paper-toggle-button-->
-
+		[[system.properties]]
+		<template is="dom-if" if="[[!system]]">
+			<div class="error">Device not detected by system</div>
+		</template>
+	
 		<template is="dom-if" if="[[_isType('ethernet', interfaceType)]]">
-			<my-ethernet name="[[name]]" config=[[config]] enabled=[[enabled]] defaults=[[defaults]]></my-ethernet>
+			<my-ethernet name="[[name]]" config=[[config]] enabled=[[enabled]] defaults=[[defaults]] system=[[system]]></my-ethernet>
 		</template>
 		<template is="dom-if" if="[[_isType('wifi', interfaceType)]]">
-			<my-wifi name="[[name]]" mode=[[mode]] ap=[[ap]] client=[[client]] enabled=[[enabled]] interfaces=[[_filterCurrentInterface(state.deviceList)]]></my-wifi>
+			<my-wifi name="[[name]]" mode=[[mode]] ap=[[ap]] client=[[client]] enabled=[[enabled]] interfaces=[[_filterCurrentInterface(state.deviceList)]] system=[[system]]></my-wifi>
 		</template>
 		<template is="dom-if" if="[[_isType('4g', interfaceType)]]">
-			<my-4g name="[[name]]" mode=[[mode]] ndis=[[ndis]] enabled=[[enabled]]></my-4g>
+			<my-4g name="[[name]]" mode=[[mode]] ndis=[[ndis]] enabled=[[enabled]] system=[[system]]></my-4g>
 		</template>
 		<template is="dom-if" if="[[_isType('3g', interfaceType)]]">
-			<my-3g name="[[name]]" config=[[config]] enabled=[[enabled]] defaults=[[defaults]]></my-3g>
+			<my-3g name="[[name]]" mode=[[mode]] ras=[[ras]] voice=[[voice]] enabled=[[enabled]] system=[[system]]></my-3g>
 		</template>
 		<template is="dom-if" if="[[!interfaceType]]">
 			Unknown interface, please specify type <paper-radio-group selected="{{_selected}}">
@@ -48,7 +44,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 				<paper-radio-button name="3g">3g modem</paper-radio-button>
 			</paper-radio-group>
 		<div>
-			<paper-button raised on-tap="onSaveTap" disabled=[[_selected]]>Save</paper-button>
+			<paper-button raised on-tap="onSaveTap" disabled=[[!_selected]]>Update</paper-button>
 		</div>
 
 		</template>
@@ -59,7 +55,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			is: 'my-interface',
 			behaviors: [
 				UniFlow.StateAware,
-				UniFlow.ActionEmiter,
+				UniFlow.ActionEmitter,
 			],
 			
 			_interfaceType(type) {
@@ -71,13 +67,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 				}
 			},
 			_filterCurrentInterface(interfaces) {
-				var filtered = [];
-				interfaces.forEach(function(interface) {
-					if (interface.name !== this.name) {
-						filtered.push(interface);
-					}
-				}.bind(this));
-				return filtered;
+				console.log('filter interfaces', interfaces);
+				if (interfaces) {
+					var filtered = [];
+					interfaces.forEach(function(interface) {
+						if (interface.name !== this.name) {
+							filtered.push(interface);
+						}
+					}.bind(this));
+					return filtered;
+				}
 			},
 			_isType(type, value) {
 				return type === value;

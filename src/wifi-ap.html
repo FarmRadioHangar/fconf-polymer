@@ -19,7 +19,7 @@
 				display: block;
 			}
 		</style>
-		<template is="dom-if" if="[[status.isModified]]">
+		<template is="dom-if" if="[[isModified]]">
 			<div class="notification">You have unsaved changes</div>
 		</template>
 		<h3>setup WPA access point:</h3>
@@ -33,19 +33,19 @@
 		<gold-ip-input label="Network mask" value="255.255.255.0" readonly disabled></gold-ip-input>
 		<paper-dropdown-menu label="Internet connection sharing" vertical-align="bottom" horizontal-align="left">
 			<paper-listbox class="dropdown-content" selected="{{model.shared_interface}}" attr-for-selected="name">
-				<paper-item>none</paper-item>
+				<paper-item name="">none</paper-item>
 				<template is="dom-repeat" items=[[interfaces]]>
 					<paper-item name="[[item.name]]">[[item.name]] ([[item.type]])</paper-item>
 				</template>
 			</paper-listbox>
 		</paper-dropdown-menu>
 		<div>
-			<paper-button raised on-tap="onSaveTap" disabled=[[!status.isModified]]>Apply changes</paper-button>
-			<paper-button raised on-tap="discardChanges" disabled=[[!status.isModified]]>Discard</paper-button>
+			<paper-button raised on-tap="onSaveTap" disabled=[[!isModified]]>Apply changes</paper-button>
+			<paper-button raised on-tap="discardChanges" disabled=[[!isModified]]>Discard</paper-button>
 			<template is="dom-if" if="[[_hasDefaults(defaults)]]">
 				<paper-button raised on-tap="loadDefaults">Load Defaults</paper-button>
 			</template>
-			<!--paper-button raised on-tap="removeConfig">Delete</paper-button-->
+			<paper-button raised on-tap="configRemove" disabled=[[!config]]>Delete</paper-button>
 		</div>
 	</template>
 
@@ -53,71 +53,83 @@
 		Polymer({
 			is: 'wifi-ap',
 
-			properties: {
-				enabled: {
-					type: Boolean,
-					value: false,
-				//	observer: '_enabledChanged'
-				},
-				config: {
-					type: Object,
-					value: function() {
-						return null;
-					}
-				},
-				defaults: {
-					type: Object,
-					value: function() {
-						return null;
+			ready() {
+				console.log('ready', this.get('config'));
+				if (!this.get('config')) {
+					if (this.get('defaults')) {
+						this.loadDefaults();
+					} else {
+						this.set('model', {});
 					}
 				}
 			},
+			properties: {
+				isModified: {
+					type: Boolean,
+					computed: '_isModified(mode, status.isModified, selected)',
+					value: false,
+				},
+				selected: {
+					type: String,
+					notify: true,
+				},
+				enabled: {
+					type: Boolean,
+					value: false,
+				},
+			},
 			observers: [
-				'_configChanged(config.*, mode)',
+				//'_configChanged(config.*, selected)',
+				'_configChanged(config.*)',
 			],
 			behaviors: [
 				UniFlow.ModelView
 			],
 
-			_isMode: 'ap',
+			_ownMode: 'ap',
 			onSaveTap() {
 				this.validateAndSave({
 					type: 'interfaceUpdate',
-					name: this.name,
-					enabled: this.enabled,
-					mode: this._isMode,
+					name: this.get('name'),
+					enabled: this.get('enabled'),
+					mode: this._ownMode,
 				});
 			},
 			discardChanges() {
-				console.log('discardChanges', this.get('config'));
-				this.set('model', JSON.parse(this.get('_model')));
+				this.set('model', JSON.parse(this._config));
+				if (this.get('selected') !== this.get('mode')) {
+					this.set('selected', this.get('mode'));
+				}
 			},
 			loadDefaults() {
+				console.log(this.config, this.model, this.status);
 				if (this.defaults) {
 					this.set('model', this.defaults);
 					var _defaults = JSON.stringify(this.defaults);
-					if (this._model !== _defaults) {
+					if (this._config !== _defaults) {
 						this.set('status.isModified', true);
 					}
 				}
-				console.log(this.config, this.model, this.status);
 			},
-			removeConfig() {
+			configRemove() {
 				this.emitAction({
-					type: 'removeConfig',
-					name: this.name,
+					type: 'configRemove',
+					name: this.get('name'),
+					mode: this.get('selected'),
 				});
 			},
 			_configChanged(changeRecord) {
-				this.set('model', this.config);
-				this.set('_model', JSON.stringify(this.model));
-				console.log('_configChanged', changeRecord.path, changeRecord.value, this.get('model'));
-				if (this.get('mode') !== this._isMode) {
-					this.set('status.isModified', true);
+				if (this.get('config')) {
+					this.set('_config', JSON.stringify(this.config));
+					this.set('model', JSON.parse(this._config));
 				}
 			},
-			_hasDefaults: function() {
-				return !!this.defaults;
+			_isModified: function(changeRecord) {
+				console.log('_isModified', changeRecord);
+				return this.get('status.isModified') || (this.get('mode') !== this._ownMode);
+			},
+			_hasDefaults: function(defaults) {
+				return !!defaults;
 			},
 		});
 	</script>

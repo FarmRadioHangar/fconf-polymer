@@ -49,6 +49,13 @@
 				}}));
 				console.log('interfaceType', detail);
 			},
+			configRemove(detail) {
+				this.$.webSocket.send(JSON.stringify({ configRemove: {
+					name: detail.name,
+					mode: detail.mode,
+				}}));
+				console.log('configRemove', detail);
+			},
 
 			// websocket handlers
 			_onWsError(error) {
@@ -68,7 +75,7 @@
 						console.error('invalid incoming key', key);
 					} else {
 						this[fCall](message.detail[key]);
-						console.log('ws-in', '<<<<==', key);
+						console.log('ws-in', '<<==', key, message.detail[key]);
 					}
 				}.bind(this));
 			},
@@ -80,10 +87,12 @@
 					deviceList: Object.keys(interfaces).map(function(key) {
 						return {
 							name: key,
-							type: interfaces[key].type,
+							type: interfaces[key].type, //temp
+							interface: interfaces[key],
 						};
 					})
 				});
+				console.log('initial state', this.get('state'));
 			},
 			_interfaceUpdate(interfaces) {
 				Object.keys(interfaces).forEach(function(key) {
@@ -97,7 +106,8 @@
 				this.set('state.deviceList', Object.keys(interfaces).map(function(key) {
 					return {
 						name: key,
-						type: interfaces[key].type,
+						type: interfaces[key].type ? interfaces[key].type : "", //temp
+						interface: interfaces[key],
 					};
 				}));
 			},
