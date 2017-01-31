@@ -19,9 +19,6 @@
 				display: block;
 			}
 		</style>
-			<template is="dom-repeat" items="[[system.addresses]]">
-				<div>mac: [[item.mac]]<br/> [[item.family]]: [[item.address]] / [[item.netmask]]</div>
-			</template>
 		ON/OFF
 		<paper-toggle-button disabled=[[!isUsable]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(isUsable, enabled)]] ([[_humanMode(mode)]] mode)</paper-toggle-button>
 			Wi-Fi mode: <paper-radio-group selected="{{_selected}}" attr-for-selected="name">

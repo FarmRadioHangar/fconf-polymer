@@ -3,6 +3,7 @@
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-slider/paper-slider.html">
 <link rel="import" href="../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
 <link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
@@ -19,14 +20,17 @@
 				display: block;
 			}
 		</style>
+		<template is="dom-if" if="[[!config]]">
+			<span class="error">Not configured</span> &nbsp;
+		</template>
 		<template is="dom-if" if="[[isModified]]">
-			<div class="notification">You have unsaved changes</div>
+			<span class="notification">You have unsaved changes</span>
 		</template>
 		<h3>setup WPA access point:</h3>
 		<paper-input id="ap_ssid" label="SSID" value="{{model.ssid}}"></paper-input>
 		<paper-input id="ap_passphrase" minlength=8 label="passphrase" value="{{model.passphrase}}"></paper-input>
 		<paper-checkbox checked={{model.hidden}}>hidden SSID</paper-checkbox>
-		<!-- add range selector (1-13) for AP channel -->
+		<!--div>Frequency channel: <paper-slider id="channel" pin snaps min="1" max="12" max-markers="12" step="1" secondary-progress="100" value="{{model.channel}}" editable></paper-slider></div-->
 		<h3>network settings:</h3>
 		<paper-checkbox checked disabled>DHCP server</paper-checkbox>
 		<gold-ip-input label="Gateway address" value="{{model.gateway}}" auto-validate></gold-ip-input>
@@ -53,14 +57,14 @@
 		Polymer({
 			is: 'wifi-ap',
 
+			_ownMode: 'ap',
 			ready() {
-				console.log('ready', this.get('config'));
+				console.log('ready', this.get('config'), this.get('defaults'));
+				if (this.get('defaults')) {
+					this.set('_defaults', JSON.stringify(this.get('defaults')));
+				}
 				if (!this.get('config')) {
-					if (this.get('defaults')) {
-						this.loadDefaults();
-					} else {
-						this.set('model', {});
-					}
+					this.loadDefaults();
 				}
 			},
 			properties: {
@@ -79,14 +83,12 @@
 				},
 			},
 			observers: [
-				//'_configChanged(config.*, selected)',
 				'_configChanged(config.*)',
 			],
 			behaviors: [
 				UniFlow.ModelView
 			],
 
-			_ownMode: 'ap',
 			onSaveTap() {
 				this.validateAndSave({
 					type: 'interfaceUpdate',
@@ -96,19 +98,24 @@
 				});
 			},
 			discardChanges() {
-				this.set('model', JSON.parse(this._config));
+				if (this.get('_model')) {
+					this.set('model', JSON.parse(this._model));
+				} else {
+					this.loadDefaults();
+				}
 				if (this.get('selected') !== this.get('mode')) {
 					this.set('selected', this.get('mode'));
 				}
 			},
 			loadDefaults() {
-				console.log(this.config, this.model, this.status);
-				if (this.defaults) {
-					this.set('model', this.defaults);
-					var _defaults = JSON.stringify(this.defaults);
-					if (this._config !== _defaults) {
+				console.log('loadDefaults', this.get('defaults'));
+				if (this.get('_defaults')) {
+					this.set('model', JSON.parse(this.get('_defaults')));
+					if (this.get('_model') !== this.get('_defaults')) {
 						this.set('status.isModified', true);
 					}
+				} else {
+					this.set('model', {});
 				}
 			},
 			configRemove() {
@@ -119,9 +126,12 @@
 				});
 			},
 			_configChanged(changeRecord) {
+				console.log('_configChanged', changeRecord);
 				if (this.get('config')) {
-					this.set('_config', JSON.stringify(this.config));
-					this.set('model', JSON.parse(this._config));
+					this.set('_model', JSON.stringify(this.config));
+					this.set('model', JSON.parse(this._model));
+				} else {
+					this.loadDefaults();
 				}
 			},
 			_isModified: function(changeRecord) {

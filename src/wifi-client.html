@@ -20,8 +20,11 @@
 				display: block;
 			}
 		</style>
+		<template is="dom-if" if="[[!config]]">
+			<span class="error">Not configured</span> &nbsp;
+		</template>
 		<template is="dom-if" if="[[isModified]]">
-			<div class="notification">You have unsaved changes</div>
+			<span class="notification">You have unsaved changes</span>
 		</template>
 		<h3>connect to WPA access point:</h3>
 		<paper-input label="SSID" value="{{model.ssid}}"></paper-input>
@@ -49,17 +52,13 @@
 			is: 'wifi-client',
 
 			ready() {
-				console.log('ready', this.get('config'));
-				if (!this.get('config')) {
-					if (this.get('defaults')) {
-						this.loadDefaults();
-					} else {
-						this.set('model', {});
-					}
+				console.log('ready', this.get('config'), this.get('defaults'));
+				if (this.get('defaults')) {
+					this.set('_defaults', JSON.stringify(this.get('defaults')));
 				}
-			},
-			_ownMode: function(val, mode) {
-				return mode === val;
+				if (!this.get('config')) {
+					this.loadDefaults();
+				}
 			},
 			_humanIndex(index) {
 				return index + 1;
@@ -103,26 +102,30 @@
 				},
 			},
 			observers: [
-				//'_configChanged(config.*, mode)',
 				'_configChanged(config.*)',
 			],
 			behaviors: [
 				UniFlow.ModelView
 			],
 			discardChanges() {
-				this.set('config', JSON.parse(this.get('_config')));
-				if (this.selected !== this.mode) {
-					this.set('selected', this.mode);
+				if (this.get('_model')) {
+					this.set('model', JSON.parse(this._model));
+				} else {
+					this.loadDefaults();
+				}
+				if (this.get('selected') !== this.get('mode')) {
+					this.set('selected', this.get('mode'));
 				}
 			},
 			loadDefaults() {
-				console.log(this.config, this.model, this.status);
-				if (this.defaults) {
-					this.set('model', this.defaults);
-					var _defaults = JSON.stringify(this.defaults);
-					if (this._config !== _defaults) {
+				console.log('loadDefaults', this.get('defaults'));
+				if (this.get('_defaults')) {
+					this.set('model', JSON.parse(this.get('_defaults')));
+					if (this.get('_model') !== this.get('_defaults')) {
 						this.set('status.isModified', true);
 					}
+				} else {
+					this.set('model', {});
 				}
 			},
 			configRemove() {
@@ -133,12 +136,13 @@
 				});
 			},
 			_configChanged(changeRecord) {
-				this.set('_config', JSON.stringify(this.config));
-				//this.set('model', Object.assign({}, this.config));
-				this.set('model', this.get('config'));
-				//this.set('_model', JSON.stringify(this.model));
-				console.log('_configChanged', changeRecord.path, changeRecord.value, this.get('model'));
-				//this.set('status.isModified', this.get('mode') !== this._ownMode);
+				console.log('_configChanged', changeRecord);
+				if (this.get('config')) {
+					this.set('_model', JSON.stringify(this.config));
+					this.set('model', JSON.parse(this._model));
+				} else {
+					this.loadDefaults();
+				}
 			},
 			_isModified: function() {
 				console.log('_isModified', this.get('mode'), this._ownMode);
