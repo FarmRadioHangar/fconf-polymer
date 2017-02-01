@@ -9,8 +9,7 @@
 <link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../bower_components/paper-radio-group/paper-radio-group.html">
 <link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu-light.html">
-<link rel="import" href="../bower_components/uniflow-polymer/state-aware.html">
-<link rel="import" href="../bower_components/uniflow-polymer/action-emitter.html">
+<link rel="import" href="interface-behaviors/interface-mode.html">
 <link rel="import" href="ip-with-mask-input.html">
 <link rel="import" href="shared-styles.html">
 <dom-module id="wifi-ap">
@@ -56,91 +55,12 @@
 	<script>
 		Polymer({
 			is: 'wifi-ap',
-
 			_ownMode: 'ap',
-			ready() {
-				console.log('ready', this.get('config'), this.get('defaults'));
-				if (this.get('defaults')) {
-					this.set('_defaults', JSON.stringify(this.get('defaults')));
-				}
-				if (!this.get('config')) {
-					this.loadDefaults();
-				}
-			},
-			properties: {
-				isModified: {
-					type: Boolean,
-					computed: '_isModified(mode, status.isModified, selected)',
-					value: false,
-				},
-				selected: {
-					type: String,
-					notify: true,
-				},
-				enabled: {
-					type: Boolean,
-					value: false,
-				},
-			},
-			observers: [
-				'_configChanged(config.*)',
-			],
+
 			behaviors: [
-				UniFlow.ModelView
+				FConf.InterfaceMode,
 			],
 
-			onSaveTap() {
-				this.validateAndSave({
-					type: 'interfaceUpdate',
-					name: this.get('name'),
-					enabled: this.get('enabled'),
-					mode: this._ownMode,
-				});
-			},
-			discardChanges() {
-				if (this.get('_model')) {
-					this.set('model', JSON.parse(this._model));
-				} else {
-					this.loadDefaults();
-				}
-				if (this.get('selected') !== this.get('mode')) {
-					this.set('selected', this.get('mode'));
-				}
-			},
-			loadDefaults() {
-				console.log('loadDefaults', this.get('defaults'));
-				if (this.get('_defaults')) {
-					this.set('model', JSON.parse(this.get('_defaults')));
-					if (this.get('_model') !== this.get('_defaults')) {
-						this.set('status.isModified', true);
-					}
-				} else {
-					this.set('model', {});
-				}
-			},
-			configRemove() {
-				this.emitAction({
-					type: 'configRemove',
-					name: this.get('name'),
-					mode: this.get('selected'),
-				});
-			},
-			_configChanged(changeRecord) {
-				console.log('_configChanged', changeRecord);
-				if (this.get('config')) {
-					this.set('_model', JSON.stringify(this.config));
-					this.set('model', JSON.parse(this._model));
-				} else {
-					this.loadDefaults();
-				}
-			},
-			_isModified: function(changeRecord) {
-				console.log('_isModified', changeRecord);
-				return this.get('status.isModified') || (this.get('mode') !== this._ownMode);
-			},
-			_hasDefaults: function(defaults) {
-				return !!defaults;
-			},
 		});
 	</script>
 </dom-module>

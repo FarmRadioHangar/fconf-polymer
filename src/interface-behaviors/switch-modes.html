@@ -1,0 +1,39 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<script type="text/javascript" type="text/ecmascript-6">
+
+	window.FConf = window.FConf || {};
+
+	window.FConf.SwitchModes = {
+
+		_modes: undefined,
+
+		_humanMode: function(mode) {
+			return this._modes[mode];
+		},
+		_isMode: function(val, mode, selected) {
+			return val === selected && this.get(val);
+		},
+		_modeChanged() {
+			this.set('_selected', this.get('mode'));
+		},
+		properties: {
+			mode: {
+				type: String,
+				observer: '_modeChanged',
+			},
+		},
+		created: function() {
+			this.observers = [];
+			Object.keys(this._modes).forEach(function(key) {
+				this['_' + key + 'Mode'] = function() {
+					console.log('_' + key + 'Mode func');
+					if (this.get('mode') === key) {
+						this._setIsUsable(true);
+					}
+				}
+				this._addComplexObserverEffect('_' + key + 'Mode(mode, ' + key + '.config, system)');
+			}.bind(this));
+		},
+	};
+</script>

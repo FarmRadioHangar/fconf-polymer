@@ -1,0 +1,126 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/uniflow-polymer/model-view.html">
+
+<script type="text/javascript" type="text/ecmascript-6">
+
+	window.FConf = window.FConf || {};
+
+	window.FConf.InterfaceModeImpl = {
+		// if this property is defined in the element, it means that it's one of many selectable modes of an interface
+		_ownMode: undefined,
+		properties: {
+			isModified: {
+				type: Boolean,
+				value: false,
+				computed: '_isModified(mode, status.isModified, selected)',
+			},
+			selected: {
+				type: String,
+				notify: true,
+			},
+			enabled: {
+				type: Boolean,
+				value: false,
+			},
+/*
+			system: {
+				type: Object,
+				observer: '_systemChanged',
+			}
+*/
+		},
+		
+		created() {
+			if (!this._ownMode) {
+				this._addComputedEffect('isModified', '_isModified(status.isModified)');
+			}
+		},
+
+		ready() {
+			console.log('ready', this.get('config'), this.get('defaults'));
+			if (this.get('defaults')) {
+				this.set('_defaults', JSON.stringify(this.get('defaults')));
+			}
+			if (!this.get('config')) {
+				this.loadDefaults();
+			}
+		},
+		observers: [
+			'_configChanged(config.*)',
+			'_systemChanged(system.*)',
+		],
+		onSaveTap() {
+			this.validateAndSave({
+				type: 'interfaceUpdate',
+				name: this.get('name'),
+				enabled: this.get('enabled'),
+				mode: this._ownMode,
+			});
+		},
+		discardChanges() {
+			console.log('discardChanges', this.get('_model'), this.get('selected'));
+			if (this.get('_model')) {
+				this.set('model', JSON.parse(this._model));
+			} else {
+				this.loadDefaults();
+			}
+			if (this.get('selected') !== this.get('mode')) {
+				this.set('selected', this.get('mode'));
+			}
+		},
+		loadDefaults() {
+			console.log('loadDefaults', this.get('defaults'));
+			if (this.get('_defaults')) {
+				this.set('model', JSON.parse(this.get('_defaults')));
+				if (this.get('_model') !== this.get('_defaults')) {
+					this.set('status.isModified', true);
+				}
+			} else {
+				this.set('model', {});
+			}
+			if (this.get('selected') && !this.get('mode')) {
+				this.set('mode', this.get('selected'));
+			}
+		},
+		configRemove() {
+			this.emitAction({
+				type: 'configRemove',
+				name: this.get('name'),
+				mode: this.get('selected'),
+			});
+		},
+		_configChanged(changeRecord) {
+			console.log('_configChanged', changeRecord);
+			if (this.get('config')) {
+				this.set('_model', JSON.stringify(this.config));
+				this.set('model', JSON.parse(this._model));
+			} else {
+				this.loadDefaults();
+			}
+		},
+		_systemChanged() {
+			if (!this.get('system')) {
+				this._setIsUsable(false);
+			} else if (!this._ownMode) {
+				this._setIsUsable(true);
+			}
+		},
+		_isModified: function(changeRecord) {
+			console.log('_isModified', changeRecord);
+			return this.get('status.isModified') || (this.get('mode') !== this._ownMode);
+		},
+		_isModified1: function(changeRecord) {
+			console.log('_isModified 11111', this.get('status.isModified'), this.get('mode'), this._ownMode);
+			return this.get('status.isModified') || (this.get('mode') !== this._ownMode);
+		},
+		_hasDefaults: function(defaults) {
+			return !!defaults;
+		},
+	};
+
+	/** @polymerBehavior */
+	window.FConf.InterfaceMode = [
+		UniFlow.ModelView,
+		FConf.InterfaceModeImpl,
+	];
+</script>

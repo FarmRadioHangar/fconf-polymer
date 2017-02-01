@@ -8,6 +8,8 @@
 <link rel="import" href="../bower_components/paper-radio-group/paper-radio-group.html">
 <link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../bower_components/uniflow-polymer/action-emitter.html">
+<link rel="import" href="interface-behaviors/interface-type.html">
+<link rel="import" href="interface-behaviors/switch-modes.html">
 <link rel="import" href="wifi-client.html">
 <link rel="import" href="wifi-ap.html">
 <link rel="import" href="shared-styles.html">
@@ -54,87 +56,13 @@
 		Polymer({
 			is: 'my-wifi',
 
-			_humanMode: function(mode) {
-				if (mode === 'ap') {
-					return "access point";
-				} else {
-					return mode;
-				}
+			_modes: {
+				ap: "access point",
+				client: "client"
 			},
-			_isMode: function(val, mode, selected) {
-				return val === selected && this.get(val);
-			},
-			_ifaceStatus: function(isUsable, enabled) {
-				if (isUsable && enabled) {
-					return "Enabled";
-				} else if (isUsable) {
-					return "Disabled";
-				} else if (enabled) {
-					return "Not found";
-				} else {
-					return "Not found or unconfigured";
-				}
-			},
-			_systemChanged() {
-				if (!this.get('system')) {
-					this._setIsUsable(false);
-				}
-			},
-			_modeAp() {
-				if (this.get('mode') === 'ap') {
-					this._setIsUsable(true);
-				}
-			},
-			_modeClient() {
-				if (this.get('mode') === 'client') {
-					this._setIsUsable(true);
-				}
-			},
-			_enabledChanged: function (event, element) {
-				console.log('_enabledChanged', event, element);
-				if (element.value !== this.get('enabled')) {
-					this.emitAction({
-						type: 'interfaceEnable',
-						name: this.name,
-						enabled: element.value
-					});
-					setTimeout(function(value) {
-						if (value !== this.get('enabled')) {
-							this.set('enabled', this.get('enabled'));
-						}
-					}.bind(this), 3000, element.value);
-				}
-			},
-			_modeChanged() {
-				this.set('_selected', this.get('mode'));
-			},
-			properties: {
-				isUsable: {
-					type: Boolean,
-					readOnly: true,
-					value: false,
-				},
-				mode: {
-					type: String,
-					observer: '_modeChanged',
-					value: 'client',
-				},
-				enabled: {
-					type: Boolean,
-					value: false,
-				},
-				system: {
-					type: Object,
-					observer: '_systemChanged',
-				}
-			},
-
-			observers: [
-				'_modeAp(mode, ap.config, system)',
-				'_modeClient(mode, client.config, system)',
-			],
 			behaviors: [
-				UniFlow.ModelView
+				FConf.InterfaceType,
+				FConf.SwitchModes,
 			],
 		});
 	</script>

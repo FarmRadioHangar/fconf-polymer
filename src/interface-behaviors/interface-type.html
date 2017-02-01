@@ -1,0 +1,53 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/uniflow-polymer/action-emitter.html">
+
+<script type="text/javascript" type="text/ecmascript-6">
+
+	window.FConf = window.FConf || {};
+
+	window.FConf.InterfaceType = {
+
+		behaviors: [
+			UniFlow.ActionEmitter
+		],
+		_ifaceStatus: function(isUsable, enabled) {
+			if (isUsable && enabled) {
+				return "Enabled";
+			} else if (isUsable) {
+				return "Disabled";
+			} else if (enabled) {
+				return "Not found";
+			} else {
+				return "Not found or unconfigured";
+			}
+		},
+		_enabledChanged: function (event, element) {
+			console.log('_enabledChanged', event, element);
+			if (element.value !== this.get('enabled')) {
+				this.emitAction({
+					type: 'interfaceEnable',
+					name: this.get('name'),
+					enabled: element.value
+				});
+				setTimeout(function(value) {
+					if (value !== this.get('enabled')) {
+						this.set('enabled', this.get('enabled'));
+					}
+				}.bind(this), 3000, element.value);
+			}
+		},
+
+		properties: {
+			isUsable: {
+				type: Boolean,
+				readOnly: true,
+				value: false,
+			},
+			enabled: {
+				type: Boolean,
+				value: false,
+			},
+		},
+
+	};
+</script>
