@@ -11,6 +11,7 @@
 <link rel="import" href="../bower_components/uniflow-polymer/state-aware.html">
 <link rel="import" href="../bower_components/uniflow-polymer/action-emitter.html">
 <link rel="import" href="shared-styles.html">
+<link rel="import" href="interface-behaviors/interface-mode.html">
 <dom-module id="voice-channel">
 	<template>
 		<style include="shared-styles">
@@ -18,8 +19,11 @@
 				display: block;
 			}
 		</style>
-		<template is="dom-if" if="[[status.isModified]]">
-			<div class="notification">You have unsaved changes</div>
+		<template is="dom-if" if="[[!config]]">
+			<span class="error">Not configured</span> &nbsp;
+		</template>
+		<template is="dom-if" if="[[isModified]]">
+			<span class="notification">You have unsaved changes</span>
 		</template>
 		<h3>setup 3G voice dongle:</h3>
 		<paper-input label="Number" value="{{model.number}}"></paper-input>
@@ -28,85 +32,23 @@
 		<paper-checkbox checked={{model.outgoingCalls}}>Outgoing calls</paper-checkbox>
 		<paper-checkbox checked={{model.outgoingSms}}>Outgoing SMS</paper-checkbox>
 		<div>
-			<paper-button raised on-tap="onSaveTap" disabled=[[!status.isModified]]>Apply changes</paper-button>
-			<paper-button raised on-tap="discardChanges" disabled=[[!status.isModified]]>Discard</paper-button>
+			<paper-button raised on-tap="onSaveTap" disabled=[[!isModified]]>Apply changes</paper-button>
+			<paper-button raised on-tap="discardChanges" disabled=[[!isModified]]>Discard</paper-button>
 			<template is="dom-if" if="[[_hasDefaults(defaults)]]">
 				<paper-button raised on-tap="loadDefaults">Load Defaults</paper-button>
 			</template>
-			<!--paper-button raised on-tap="removeConfig">Delete</paper-button-->
+			<paper-button raised on-tap="configRemove" disabled=[[!config]]>Delete</paper-button>
 		</div>
 	</template>
 
 	<script>
 		Polymer({
 			is: 'voice-channel',
+			_ownMode: 'voice',
 
-			properties: {
-				enabled: {
-					type: Boolean,
-					value: false,
-				//	observer: '_enabledChanged'
-				},
-				config: {
-					type: Object,
-					value: function() {
-						return null;
-					}
-				},
-				defaults: {
-					type: Object,
-					value: function() {
-						return null;
-					}
-				}
-			},
-			observers: [
-				'_configChanged(config.*, mode)',
-			],
 			behaviors: [
-				UniFlow.ModelView
+				FConf.InterfaceMode,
 			],
-
-			_isMode: 'ap',
-			onSaveTap() {
-				this.validateAndSave({
-					type: 'interfaceUpdate',
-					name: this.name,
-					enabled: this.enabled,
-					mode: this._isMode,
-				});
-			},
-			discardChanges() {
-				console.log('discardChanges', this.get('config'));
-				this.set('model', JSON.parse(this.get('_model')));
-			},
-			loadDefaults() {
-				if (this.defaults) {
-					this.set('model', this.defaults);
-					var _defaults = JSON.stringify(this.defaults);
-					if (this._model !== _defaults) {
-						this.set('status.isModified', true);
-					}
-				}
-				console.log(this.config, this.model, this.status);
-			},
-			removeConfig() {
-				this.emitAction({
-					type: 'removeConfig',
-					name: this.name,
-				});
-			},
-			_configChanged(changeRecord) {
-				this.set('model', this.config);
-				this.set('_model', JSON.stringify(this.model));
-				console.log('_configChanged', changeRecord.path, changeRecord.value, this.get('model'));
-				if (this.get('mode') !== this._isMode) {
-					this.set('status.isModified', true);
-				}
-			},
-			_hasDefaults: function() {
-				return !!this.defaults;
-			},
 		});
 	</script>
 </dom-module>

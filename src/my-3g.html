@@ -7,8 +7,9 @@
 <link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../bower_components/paper-radio-group/paper-radio-group.html">
 <link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
-<link rel="import" href="../bower_components/uniflow-polymer/state-aware.html">
 <link rel="import" href="../bower_components/uniflow-polymer/action-emitter.html">
+<link rel="import" href="interface-behaviors/interface-type.html">
+<link rel="import" href="interface-behaviors/switch-modes.html">
 <link rel="import" href="ras-3g.html">
 <link rel="import" href="voice-channel.html">
 <link rel="import" href="shared-styles.html">
@@ -21,27 +22,29 @@
 			}
 		</style>
 		ON/OFF
-		<paper-toggle-button disabled=[[!_ifaceUsable(status)]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(status, enabled)]] ([[_humanMode(mode)]] mode)</paper-toggle-button>
-			3G dongle mode: <paper-radio-group selected="{{_selected}}">
-				<paper-radio-button name="ras">data</paper-radio-button>
-				<paper-radio-button name="voice">voice</paper-radio-button>
-			</paper-radio-group>
+		<paper-toggle-button disabled=[[!isUsable]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(isUsable, enabled)]] ([[_humanMode(mode)]] mode)</paper-toggle-button>
+			3G dongle mode: <paper-radio-group selected="{{_selected}}" attr-for-selected="name">
+			<template is="dom-if" if="[[ras]]"><paper-radio-button name="ras">data</paper-radio-button></template>
+			<template is="dom-if" if="[[voice]]"><paper-radio-button name="voice">voice</paper-radio-button></template>
+		</paper-radio-group>
 		<div class="card">
-			<template is="dom-if" if="[[_isMode('ras', _selected)]]">
+			<template is="dom-if" if="[[_isMode('ras', ras, _selected)]]">
 				<ras-3g
 					name=[[name]]
 					enabled=[[enabled]]
 					config=[[ras.config]]
 					defaults=[[ras.defaults]]
+					selected={{_selected}}
 					mode=[[mode]]>
 				</ras-3g>
 			</template>
-			<template is="dom-if" if="[[_isMode('voice', _selected)]]">
+			<template is="dom-if" if="[[_isMode('voice', voice, _selected)]]">
 				<voice-channel
 					name="[[name]]"
 					enabled=[[enabled]]
 					config=[[voice.config]]
 					defaults=[[voice.defaults]]
+					selected={{_selected}}
 					mode=[[mode]]>
 				</voice-chennel>
 			</template>
@@ -51,64 +54,13 @@
 	<script>
 		Polymer({
 			is: 'my-3g',
-
-			_humanMode: function(mode) {
-				if (mode === 'ras') {
-					return "data (RAS)";
-				} else {
-					return mode;
-				}
+			_modes: {
+				ras: "data (RAS)",
+				voice: "voice"
 			},
-			_isMode: function(val, mode) {
-				return mode === val;
-			},
-
-			_ifaceStatus: function(status, enabled) {
-				//console.log('_ifaceStatus:');
-				return (this._ifaceUsable(status) && enabled) ? "Enabled" : "Disabled";
-			},
-			_ifaceUsable: function(status) {
-				//console.log('_ifaceUsable:');
-				return true;
-				return !!(status);
-			},
-
-			_isEnabled(enabled, mode) {
-				return this.get('enabled') && (this.get('mode') === mode);
-			},
-			_enabledChanged: function (event, element) {
-				console.log('_enabledChanged', event, element);
-				this.emitAction({
-					type: 'interfaceEnable',
-					name: this.name,
-					enabled: element.value
-				});
-				setTimeout(function(value) {
-					if (value !== this.get('enabled')) {
-						this.set('enabled', this.get('enabled'));
-					}
-				}.bind(this), 3000, element.value);
-			},
-			_modeChanged() {
-				this.set('_selected', this.get('mode'));
-			},
-			properties: {
-				name: {
-					type: String,
-				},
-				mode: {
-					type: String,
-					observer: '_modeChanged',
-				},
-				enabled: {
-					type: Boolean,
-					value: false,
-				//	observer: '_enabledChanged'
-				},
-			},
-
 			behaviors: [
-				UniFlow.ModelView
+				FConf.InterfaceType,
+				FConf.SwitchModes,
 			],
 		});
 	</script>
