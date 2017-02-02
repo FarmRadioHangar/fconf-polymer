@@ -5,11 +5,8 @@
 
 	window.FConf = window.FConf || {};
 
-	window.FConf.InterfaceType = {
+	window.FConf.InterfaceTypeImpl = {
 
-		behaviors: [
-			UniFlow.ActionEmitter
-		],
 		_ifaceStatus: function(isUsable, enabled) {
 			if (isUsable && enabled) {
 				return "Enabled";
@@ -50,4 +47,8 @@
 		},
 
 	};
+	window.FConf.InterfaceType = [
+		FConf.InterfaceTypeImpl,
+		UniFlow.ActionEmitter,
+	];
 </script>

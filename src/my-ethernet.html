@@ -1,6 +1,8 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/gold-ip-input/gold-ip-input.html">
 <link rel="import" href="../bower_components/uniflow-polymer/model-view.html">
+<link rel="import" href="interface-behaviors/interface-mode.html">
+<link rel="import" href="interface-behaviors/interface-type.html">
 <link rel="import" href="shared-styles.html">
 <link rel="import" href="ip-with-mask-input.html">
 
@@ -11,12 +13,17 @@
 				display: block;
 			}
 		</style>
+		<hr/>
 		ON/OFF
-		<paper-toggle-button disabled=[[!_ifaceUsable(status)]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(status, enabled)]]</paper-toggle-button>
-		<div class="card">
-			<template is="dom-if" if="[[status.isModified]]">
-				<div class="notification">You have unsaved changes</div>
+		<paper-toggle-button disabled=[[!isUsable]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(isUsable, enabled)]]</paper-toggle-button>
+			<div class="card">
+			<template is="dom-if" if="[[!config]]">
+				<span class="error">Not configured</span> &nbsp;
 			</template>
+			<template is="dom-if" if="[[isModified]]">
+				<span class="notification">You have unsaved changes</span>
+			</template>
+			<h3>Network settings:</h3>
 			<paper-checkbox on-checked-changed="_dhcpChanged" checked={{model.dhcp}}>DHCP client</paper-checkbox>
 			<ip-with-mask-input id="staticIP" value="{{model.static.ip}}"></ip-with-mask-input>
 			<template is="dom-repeat" items="{{model.dns-servers}}" >
@@ -25,12 +32,12 @@
 	
 			<gold-ip-input id="gateway" label="Gateway" value="{{model.static.gateway}}" auto-validate></gold-ip-input>
 			<div>
-				<paper-button raised on-tap="onSaveTap" disabled=[[!status.isModified]]>Apply changes</paper-button>
-				<paper-button raised on-tap="discardChanges" disabled=[[!status.isModified]]>Discard</paper-button>
+				<paper-button raised on-tap="onSaveTap" disabled=[[!isModified]]>Apply changes</paper-button>
+				<paper-button raised on-tap="discardChanges" disabled=[[!isModified]]>Discard</paper-button>
 				<template is="dom-if" if="[[_hasDefaults(defaults)]]">
 					<paper-button raised on-tap="loadDefaults">Load Defaults</paper-button>
 				</template>
-				<!--paper-button raised on-tap="removeConfig">Delete</paper-button-->
+				<paper-button raised on-tap="configRemove" disabled=[[!config]]>Delete</paper-button>
 			</div>
 		</div>
 	</template>
@@ -39,42 +46,11 @@
 		Polymer({
 			is: 'my-ethernet',
 
-			onSaveTap() {
-				this.validateAndSave({
-					type: 'interfaceUpdate',
-					name: this.name,
-					enabled: this.enabled,
-				});
-			},
 			_humanIndex(index) {
 				return index + 1;
 			},
 			_dnsChanged(event) {
 				console.log('_dnsChanged', event);
-			},
-			_ifaceStatus: function(status, enabled) {
-				//console.log('_ifaceStatus:');
-				return (this._ifaceUsable(status) && enabled) ? "Enabled" : "Disabled";
-			},
-			_ifaceUsable: function(status) {
-				console.log('_ifaceUsable:', !!(status));
-				return !!(status);
-			},
-			_hasDefaults: function() {
-				return !!this.defaults;
-			},
-			_enabledChanged: function (event, element) {
-				console.log('_enabledChanged', event, element);
-				this.emitAction({
-					type: 'interfaceEnable',
-					name: this.name,
-					enabled: element.value
-				});
-				setTimeout(function(value) {
-					if (value !== this.get('enabled')) {
-						this.set('enabled', this.get('enabled'));
-					}
-				}.bind(this), 3000, element.value);
 			},
 
 			_dhcpChanged: function (event, element) {
@@ -92,50 +68,10 @@
 			},
 
 			behaviors: [
-				UniFlow.ModelView
+				FConf.InterfaceType,
+				FConf.InterfaceMode,
 			],
-			//attached() {
-			//},
-			discardChanges() {
-				console.log('discardChanges', this.get('config'));
-				this.set('model', JSON.parse(this.get('_model')));
-			},
-			removeConfig() {
-				this.emitAction({
-					type: 'removeConfig',
-					name: this.name,
-				});
-			},
-			_configChanged(changeRecord) {
-				this.set('model', this.config);
-				this.set('_model', JSON.stringify(this.model));
-				console.log('_configChanged', changeRecord.path, changeRecord.value, this.get('model'));
-			},
-			loadDefaults() {
-				if (this.defaults) {
-					this.set('model', this.defaults);
-					var _defaults = JSON.stringify(this.defaults);
-					if (this._model !== _defaults) {
-						this.set('status.isModified', true);
-					}
-				}
-				console.log(this.config, this.model, this.status);
-			},
-			properties: {
-				config: {
-					type: Object,
-				},
-				defaults: {
-					type: Object,
-				},
-				enabled: {
-					type: Boolean,
-//					value: false
-				}
-			},
-			observers: [
-				'_configChanged(config.*)',
-			],
+
 /*			validation: {
 				static: (value) => {
 					if (value.gateway && value.gateway.trim()) {
