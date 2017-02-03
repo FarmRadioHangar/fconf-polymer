@@ -21,8 +21,13 @@
 				display: block;
 			}
 		</style>
+		<template is="dom-if" if="[[system]]">
+			[[system.tty]] [[system.ati]]
+			<blockquote>[[system.ati]]</blockquote>
+		</template>
+		<hr/>
 		ON/OFF
-		<paper-toggle-button disabled=[[!isUsable]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(isUsable, enabled)]] ([[_humanMode(mode)]] mode)</paper-toggle-button>
+		<paper-toggle-button id="toggleEnabled" disabled=[[!isUsable]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(isUsable, enabled)]] ([[_humanMode(mode)]] mode)</paper-toggle-button>
 			3G dongle mode: <paper-radio-group selected="{{_selected}}" attr-for-selected="name">
 			<template is="dom-if" if="[[ras]]"><paper-radio-button name="ras">data</paper-radio-button></template>
 			<template is="dom-if" if="[[voice]]"><paper-radio-button name="voice">voice</paper-radio-button></template>

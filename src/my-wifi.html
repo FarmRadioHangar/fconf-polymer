@@ -21,8 +21,9 @@
 				display: block;
 			}
 		</style>
+		<hr/>
 		ON/OFF
-		<paper-toggle-button disabled=[[!isUsable]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(isUsable, enabled)]] ([[_humanMode(mode)]] mode)</paper-toggle-button>
+		<paper-toggle-button id="toggleEnabled" disabled=[[!isUsable]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(isUsable, enabled)]] ([[_humanMode(mode)]] mode)</paper-toggle-button>
 			Wi-Fi mode: <paper-radio-group selected="{{_selected}}" attr-for-selected="name">
 				<template is="dom-if" if="[[client]]"><paper-radio-button name="client">client</paper-radio-button></template>
 				<template is="dom-if" if="[[ap]]"><paper-radio-button name="ap">access point</paper-radio-button></template>

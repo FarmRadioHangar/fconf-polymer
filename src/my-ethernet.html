@@ -15,7 +15,7 @@
 		</style>
 		<hr/>
 		ON/OFF
-		<paper-toggle-button disabled=[[!isUsable]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(isUsable, enabled)]]</paper-toggle-button>
+		<paper-toggle-button id="toggleEnabled" disabled=[[!isUsable]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(isUsable, enabled)]]</paper-toggle-button>
 			<div class="card">
 			<template is="dom-if" if="[[!config]]">
 				<span class="error">Not configured</span> &nbsp;
