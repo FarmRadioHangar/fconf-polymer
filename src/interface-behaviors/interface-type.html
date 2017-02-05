@@ -26,12 +26,6 @@
 					name: this.get('name'),
 					enabled: element.value
 				});
-				setTimeout(function(value) {
-					if (value !== this.get('enabled')) {
-						this.$.toggleEnabled.checked = this.get('enabled');	
-						//this.set('enabled', this.get('enabled'));
-					}
-				}.bind(this), 3000, element.value);
 			}
 		},
 

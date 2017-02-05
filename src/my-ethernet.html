@@ -4,6 +4,7 @@
 <link rel="import" href="interface-behaviors/interface-mode.html">
 <link rel="import" href="interface-behaviors/interface-type.html">
 <link rel="import" href="shared-styles.html">
+<link rel="import" href="toggle-confirm-button.html">
 <link rel="import" href="ip-with-mask-input.html">
 
 <dom-module id="my-ethernet">
@@ -13,33 +14,42 @@
 				display: block;
 			}
 		</style>
-		<hr/>
-		ON/OFF
-		<paper-toggle-button id="toggleEnabled" disabled=[[!isUsable]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(isUsable, enabled)]]</paper-toggle-button>
-			<div class="card">
-			<template is="dom-if" if="[[!config]]">
-				<span class="error">Not configured</span> &nbsp;
-			</template>
-			<template is="dom-if" if="[[isModified]]">
-				<span class="notification">You have unsaved changes</span>
-			</template>
-			<h3>Network settings:</h3>
-			<paper-checkbox on-checked-changed="_dhcpChanged" checked={{model.dhcp}}>DHCP client</paper-checkbox>
-			<ip-with-mask-input id="staticIP" value="{{model.static.ip}}"></ip-with-mask-input>
-			<template is="dom-repeat" items="{{model.dns-servers}}" >
-				<gold-ip-input on-change="_dnsChanged" id="dns[[index]]" label="DNS [[_humanIndex(index)]]" value="{{item}}"></gold-ip-input>
-			</template>
-	
-			<gold-ip-input id="gateway" label="Gateway" value="{{model.static.gateway}}" auto-validate></gold-ip-input>
-			<div>
-				<paper-button raised on-tap="onSaveTap" disabled=[[!isModified]]>Apply changes</paper-button>
-				<paper-button raised on-tap="discardChanges" disabled=[[!isModified]]>Discard</paper-button>
-				<template is="dom-if" if="[[_hasDefaults(defaults)]]">
-					<paper-button raised on-tap="loadDefaults">Load Defaults</paper-button>
+		<!-- wrapper div is used to fit toggle-confirm dialog -->
+		<div class="wrapper">
+			<hr/>
+			ON/OFF
+			<toggle-confirm-button
+				class="toggleEnabled"
+				confirm-off="Disabling the ethernet interface is not recommended, are you sure you know what are you doing?"
+				timeout="3333"
+				disabled=[[!isUsable]]
+				on-confirmed-change="_enabledChanged"
+				checked="[[enabled]]" notify>
+					[[_ifaceStatus(isUsable, enabled)]]
+			</toggle-confirm-button>
+			<div id="test" class="card">
+				<template is="dom-if" if="[[!config]]">
+					<span class="error">Not configured</span> &nbsp;
 				</template>
-				<paper-button raised on-tap="configRemove" disabled=[[!config]]>Delete</paper-button>
-			</div>
-		</div>
+				<template is="dom-if" if="[[isModified]]">
+					<span class="notification">You have unsaved changes</span>
+				</template>
+				<h3>Network settings:</h3>
+				<paper-checkbox on-checked-changed="_dhcpChanged" checked={{model.dhcp}}>DHCP client</paper-checkbox>
+				<ip-with-mask-input id="staticIP" value="{{model.static.ip}}"></ip-with-mask-input>
+				<template is="dom-repeat" items="{{model.dns-servers}}" >
+					<gold-ip-input on-change="_dnsChanged" id="dns[[index]]" label="DNS [[_humanIndex(index)]]" value="{{item}}"></gold-ip-input>
+				</template>
+		
+				<gold-ip-input id="gateway" label="Gateway" value="{{model.static.gateway}}" auto-validate></gold-ip-input>
+				<div>
+					<paper-button raised on-tap="onSaveTap" disabled=[[!isModified]]>Apply changes</paper-button>
+					<paper-button raised on-tap="discardChanges" disabled=[[!isModified]]>Discard</paper-button>
+					<template is="dom-if" if="[[_hasDefaults(defaults)]]">
+						<paper-button raised on-tap="loadDefaults">Load Defaults</paper-button>
+					</template>
+					<paper-button raised on-tap="configRemove" disabled=[[!config]]>Delete</paper-button>
+				</div>
 	</template>
 
 	<script>

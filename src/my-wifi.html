@@ -12,6 +12,7 @@
 <link rel="import" href="interface-behaviors/switch-modes.html">
 <link rel="import" href="wifi-client.html">
 <link rel="import" href="wifi-ap.html">
+<link rel="import" href="toggle-confirm-button.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-wifi">
@@ -21,34 +22,48 @@
 				display: block;
 			}
 		</style>
-		<hr/>
-		ON/OFF
-		<paper-toggle-button id="toggleEnabled" disabled=[[!isUsable]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(isUsable, enabled)]] ([[_humanMode(mode)]] mode)</paper-toggle-button>
-			Wi-Fi mode: <paper-radio-group selected="{{_selected}}" attr-for-selected="name">
+		<!-- wrapper div is used to fit toggle-confirm dialog -->
+		<div class="wrapper">
+			<hr/>
+			ON/OFF
+			<toggle-confirm-button
+				class="toggleEnabled"
+				confirm-off="Disabling the interface may prevent you from connecting to your device. Are you sure you know what are you doing?"
+				timeout="3333"
+				disabled=[[!isUsable]]
+				on-confirmed-change="_enabledChanged"
+				checked="[[enabled]]" notify>
+					[[_ifaceStatus(isUsable, enabled)]] ([[_humanMode(mode)]] mode)
+			</toggle-confirm-button>
+			Wi-Fi mode:
+			<paper-radio-group selected="{{_selected}}" attr-for-selected="name">
 				<template is="dom-if" if="[[client]]"><paper-radio-button name="client">client</paper-radio-button></template>
 				<template is="dom-if" if="[[ap]]"><paper-radio-button name="ap">access point</paper-radio-button></template>
 			</paper-radio-group>
-		<div class="card">
-			<template is="dom-if" if="[[_isMode('client', client, _selected)]]">
-				<wifi-client
-					name=[[name]]
-					enabled=[[enabled]]
-					config=[[client.config]]
-					defaults=[[client.defaults]]
-					selected={{_selected}}
-					mode=[[mode]]>
-				</wifi-client>
-			</template>
-			<template is="dom-if" if="[[_isMode('ap', ap, _selected)]]">
-				<wifi-ap
-					name="[[name]]"
-					enabled=[[enabled]]
-					config=[[ap.config]]
-					defaults=[[ap.defaults]]
-					selected={{_selected}}
-					interfaces=[[interfaces]]
-					mode=[[mode]]>
-				</wifi-ap>
+			<template is="dom-if" if="[[_selected]]">
+				<div class="card">
+					<template is="dom-if" if="[[_isMode('client', client, _selected)]]">
+						<wifi-client
+							name=[[name]]
+							enabled=[[enabled]]
+							config=[[client.config]]
+							defaults=[[client.defaults]]
+							selected={{_selected}}
+							mode=[[mode]]>
+						</wifi-client>
+					</template>
+					<template is="dom-if" if="[[_isMode('ap', ap, _selected)]]">
+						<wifi-ap
+							name="[[name]]"
+							enabled=[[enabled]]
+							config=[[ap.config]]
+							defaults=[[ap.defaults]]
+							selected={{_selected}}
+							interfaces=[[interfaces]]
+							mode=[[mode]]>
+						</wifi-ap>
+					</template>
+				</div>
 			</template>
 		</div>
 	</template>

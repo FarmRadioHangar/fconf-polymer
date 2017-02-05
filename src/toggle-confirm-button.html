@@ -1,0 +1,93 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="toggle-confirm-button">
+	<template>
+		<paper-toggle-button id="button" on-checked-changed="_confirm" disabled=[[disabled]] checked=[[checked]]>
+			<content></content>
+		</paper-toggle-button>
+		<paper-dialog id="confirm"
+			fit-into=[[dialogFit]]
+			on-iron-overlay-closed="_dialogClosed"
+			always-on-top>
+		  <h2>Confirm [[_action]]</h2>
+		  <p>[[confirmOff]]</p>
+		  <div class="buttons">
+			<paper-button dialog-dismiss>Abort</paper-button>
+			<paper-button dialog-confirm autofocus>Confirm</paper-button>
+		  </div>
+		</paper-dialog>
+		<paper-dialog id="timeout"
+			fit-into=[[dialogFit]]
+			always-on-top>
+		  <h2>[[_action]] failed</h2>
+		  <p>[[timeoutMessage]]</p>
+		  <div class="buttons">
+			<paper-button dialog-dismiss autofocus>Close</paper-button>
+		  </div>
+		</paper-dialog>
+	</template>
+
+	<script>
+		Polymer({
+			is: 'toggle-confirm-button',
+			ready() {
+				if (!this.get('dialogFit')) {
+					this.$.confirm.fitInto = this.parentNode;
+					this.$.timeout.fitInto = this.parentNode;
+				}
+			},
+			properties: {
+				dialogFit: {
+					type: Object,
+				},
+				timeout: {
+					type: Number,
+					value: 0,
+				},
+				timeoutMessage: {
+					type: String,
+					value: 'Operation did not complete in the given timeout',
+				},
+				checked: {
+					type: Boolean,
+				},
+			},
+			_dialogClosed(event, element) {
+				console.log('dialogClosed', event, element);
+				if (event.detail.canceled === false && event.detail.confirmed === true) {
+					this._fireConfirmed(this.$.button.checked);
+				} else {
+					this.$.button.checked = this.get('checked');
+				}
+			},
+			_fireConfirmed(value) {
+				this.fire('confirmed-change', { value: value });
+				if (this.timeout) {
+					setTimeout(function(value) {
+						if (value !== this.get('checked')) {
+							this.$.button.checked = this.get('checked');
+							this.$.timeout.fit();
+							this.$.timeout.open();
+						}
+					}.bind(this), this.timeout, value);
+				}
+			},
+			_confirm(event, element) {
+				console.log('confirm', event, element);
+				if (element.value !== this.get('checked')) {
+					if ((element.value && this.confirmOn) || (!element.value && this.confirmOff)) {
+						this.set('_action', element.value ? 'Enable' : 'Disable');
+						this.$.confirm.fit();
+						this.$.confirm.open();
+					} else {
+						this._fireConfirmed(element.value);
+					}
+				}
+			},
+		});
+	</script>
+</dom-module>
