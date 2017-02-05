@@ -13,21 +13,24 @@
 			fit-into=[[dialogFit]]
 			on-iron-overlay-closed="_dialogClosed"
 			always-on-top>
-		  <h2>Confirm [[_action]]</h2>
-		  <p>[[confirmOff]]</p>
-		  <div class="buttons">
+		<h2>Confirm [[_action]]</h2>
+		<p>
+			<template is="dom-if" if="[[checked]]">[[confirmOff]]</template>
+			<template is="dom-if" if="[[!checked]]">[[confirmOn]]</template>
+		</p>
+		<div class="buttons">
 			<paper-button dialog-dismiss>Abort</paper-button>
 			<paper-button dialog-confirm autofocus>Confirm</paper-button>
-		  </div>
+		</div>
 		</paper-dialog>
 		<paper-dialog id="timeout"
 			fit-into=[[dialogFit]]
 			always-on-top>
-		  <h2>[[_action]] failed</h2>
-		  <p>[[timeoutMessage]]</p>
-		  <div class="buttons">
+		<h2>[[_action]] failed</h2>
+		<p>[[timeoutMessage]]</p>
+		<div class="buttons">
 			<paper-button dialog-dismiss autofocus>Close</paper-button>
-		  </div>
+		</div>
 		</paper-dialog>
 	</template>
 
@@ -36,8 +39,7 @@
 			is: 'toggle-confirm-button',
 			ready() {
 				if (!this.get('dialogFit')) {
-					this.$.confirm.fitInto = this.parentNode;
-					this.$.timeout.fitInto = this.parentNode;
+					this.set('dialogFit', this.parentNode);
 				}
 			},
 			properties: {
@@ -56,7 +58,7 @@
 					type: Boolean,
 				},
 			},
-			_dialogClosed(event, element) {
+			_dialogClosed(event) {
 				if (event.detail.canceled === false && event.detail.confirmed === true) {
 					this._fireConfirmed(this.$.button.checked);
 				} else {
