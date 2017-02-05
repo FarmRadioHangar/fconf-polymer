@@ -57,7 +57,6 @@
 				},
 			},
 			_dialogClosed(event, element) {
-				console.log('dialogClosed', event, element);
 				if (event.detail.canceled === false && event.detail.confirmed === true) {
 					this._fireConfirmed(this.$.button.checked);
 				} else {
@@ -77,10 +76,9 @@
 				}
 			},
 			_confirm(event, element) {
-				console.log('confirm', event, element);
 				if (element.value !== this.get('checked')) {
+					this.set('_action', element.value ? 'Enable' : 'Disable');
 					if ((element.value && this.confirmOn) || (!element.value && this.confirmOff)) {
-						this.set('_action', element.value ? 'Enable' : 'Disable');
 						this.$.confirm.fit();
 						this.$.confirm.open();
 					} else {
