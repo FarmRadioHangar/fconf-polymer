@@ -22,12 +22,6 @@
 				type: Boolean,
 				value: false,
 			},
-/*
-			system: {
-				type: Object,
-				observer: '_systemChanged',
-			}
-*/
 		},
 		
 		created() {
@@ -35,9 +29,7 @@
 				this._addComputedEffect('isModified', '_isModified(status.isModified)');
 			}
 		},
-
 		ready() {
-			console.log('ready', this.get('config'), this.get('defaults'));
 			if (this.get('defaults')) {
 				this.set('_defaults', JSON.stringify(this.get('defaults')));
 			}
@@ -105,15 +97,13 @@
 				this._setIsUsable(true);
 			}
 		},
-		_isModified: function(changeRecord) {
-			console.log('_isModified', changeRecord);
+		_isModified(changeRecord) {
 			return this.get('status.isModified') || (this.get('mode') !== this._ownMode);
 		},
-		_isModified1: function(changeRecord) {
-			console.log('_isModified 11111', this.get('status.isModified'), this.get('mode'), this._ownMode);
-			return this.get('status.isModified') || (this.get('mode') !== this._ownMode);
+		_isRemovable(config, enabled) {
+			return !!config && !enabled;
 		},
-		_hasDefaults: function(defaults) {
+		_hasDefaults(defaults) {
 			return !!defaults;
 		},
 	};
