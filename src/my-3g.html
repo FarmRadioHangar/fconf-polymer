@@ -12,6 +12,7 @@
 <link rel="import" href="interface-behaviors/switch-modes.html">
 <link rel="import" href="ras-3g.html">
 <link rel="import" href="voice-channel.html">
+<link rel="import" href="toggle-confirm-button.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-3g">
@@ -22,36 +23,50 @@
 			}
 		</style>
 		<template is="dom-if" if="[[system]]">
+			IMEI: [[system.imei]]<br/>
 			[[system.tty]] [[system.ati]]
 			<blockquote>[[system.ati]]</blockquote>
 		</template>
-		<hr/>
-		ON/OFF
-		<paper-toggle-button id="toggleEnabled" disabled=[[!isUsable]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(isUsable, enabled)]] ([[_humanMode(mode)]] mode)</paper-toggle-button>
-			3G dongle mode: <paper-radio-group selected="{{_selected}}" attr-for-selected="name">
-			<template is="dom-if" if="[[ras]]"><paper-radio-button name="ras">data</paper-radio-button></template>
-			<template is="dom-if" if="[[voice]]"><paper-radio-button name="voice">voice</paper-radio-button></template>
-		</paper-radio-group>
-		<div class="card">
-			<template is="dom-if" if="[[_isMode('ras', ras, _selected)]]">
-				<ras-3g
-					name=[[name]]
-					enabled=[[enabled]]
-					config=[[ras.config]]
-					defaults=[[ras.defaults]]
-					selected={{_selected}}
-					mode=[[mode]]>
-				</ras-3g>
-			</template>
-			<template is="dom-if" if="[[_isMode('voice', voice, _selected)]]">
-				<voice-channel
-					name="[[name]]"
-					enabled=[[enabled]]
-					config=[[voice.config]]
-					defaults=[[voice.defaults]]
-					selected={{_selected}}
-					mode=[[mode]]>
-				</voice-chennel>
+		<!-- wrapper div is used to fit toggle-confirm dialog -->
+		<div class="wrapper">
+			<hr/>
+			ON/OFF
+			<toggle-confirm-button
+				class="toggleEnabled"
+				timeout="3333"
+				disabled=[[!isUsable]]
+				on-confirmed-change="_enabledChanged"
+				checked="[[enabled]]" notify>
+					[[_ifaceStatus(isUsable, enabled)]] ([[_humanMode(mode)]] mode)
+			</toggle-confirm-button>
+			3G dongle mode:
+			<paper-radio-group selected="{{_selected}}" attr-for-selected="name">
+				<template is="dom-if" if="[[ras]]"><paper-radio-button name="ras">data</paper-radio-button></template>
+				<template is="dom-if" if="[[voice]]"><paper-radio-button name="voice">voice</paper-radio-button></template>
+			</paper-radio-group>
+			<template is="dom-if" if="[[_selected]]">
+				<div class="card">
+					<template is="dom-if" if="[[_isMode('ras', ras, _selected)]]">
+						<ras-3g
+							name=[[name]]
+							enabled=[[enabled]]
+							config=[[ras.config]]
+							defaults=[[ras.defaults]]
+							selected={{_selected}}
+							mode=[[mode]]>
+						</ras-3g>
+					</template>
+					<template is="dom-if" if="[[_isMode('voice', voice, _selected)]]">
+						<voice-channel
+							name="[[name]]"
+							enabled=[[enabled]]
+							config=[[voice.config]]
+							defaults=[[voice.defaults]]
+							selected={{_selected}}
+							mode=[[mode]]>
+						</voice-chennel>
+					</template>
+				</div>
 			</template>
 		</div>
 	</template>

@@ -26,11 +26,12 @@
 			<span class="notification">You have unsaved changes</span>
 		</template>
 		<h3>setup 3G voice dongle:</h3>
+		<span>IMSI: [[model.imsi]]</span>
+		<paper-input label="Name" value="{{model.name}}"></paper-input>
 		<paper-input label="Number" value="{{model.number}}"></paper-input>
 		<paper-input label="Label" value="{{model.label}}"></paper-input>
-		<paper-input label="Name" value="{{model.name}}"></paper-input>
-		<paper-checkbox checked={{model.outgoingCalls}}>Outgoing calls</paper-checkbox>
-		<paper-checkbox checked={{model.outgoingSms}}>Outgoing SMS</paper-checkbox>
+		<paper-checkbox checked={{model.calls_out}}>Outgoing calls</paper-checkbox>
+		<paper-checkbox checked={{model.sms_out}}>Outgoing SMS</paper-checkbox>
 		<div>
 			<paper-button raised on-tap="onSaveTap" disabled=[[!isModified]]>Apply changes</paper-button>
 			<paper-button raised on-tap="discardChanges" disabled=[[!isModified]]>Discard</paper-button>
