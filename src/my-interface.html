@@ -18,12 +18,20 @@
 			}
 		</style>
 		<h1>Configure [[_interfaceType(interfaceType)]] interface [[name]]</h1>
+		<template is="dom-if" if="[[system]]">
+			<template is="dom-if" if="[[system.addresses]]">
+				<template is="dom-repeat" items="[[system.addresses]]">
+					<div>mac: [[item.mac]]<br/> [[item.family]]: [[item.address]] / [[item.netmask]]</div>
+				</template>
+			</template>
 		<!--paper-toggle-button disabled=[[_ifaceUsable(status)]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(status, enabled)]]</paper-toggle-button-->
-		[[system.properties]]
+			<template is="dom-if" if="[[system.properties]]">
+				[[system.properties]],MTU=[[system.mtu]]
+			</template>
+		</template>
 		<template is="dom-if" if="[[!system]]">
 			<div class="error">Device not detected by system</div>
 		</template>
-	
 		<template is="dom-if" if="[[_isType('ethernet', interfaceType)]]">
 			<my-ethernet name="[[name]]" config=[[config]] enabled=[[enabled]] defaults=[[defaults]] system=[[system]]></my-ethernet>
 		</template>

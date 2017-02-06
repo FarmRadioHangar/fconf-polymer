@@ -14,7 +14,8 @@
 		<h1>Interface summary</h1>
 		<template is="dom-repeat" items="[[interfaces]]" as="iface">
 			<hr/>
-			<h2>[[iface.name]] [[_humanType(iface.type)]]</h2>
+			<strong>[[_humanType(iface.interface.type)]] [[_humanMode(iface.interface.mode)]]</strong>
+			<h2>[[iface.name]]</h2>
 			[[iface.interface.system.properties]]
 			<template is="dom-repeat" items="[[iface.interface.system.addresses]]">
 				<div>mac: [[item.mac]]<br/> [[item.family]]: [[item.address]] / [[item.netmask]]</div>
@@ -22,7 +23,7 @@
 			<!--template is="dom-if" if="[[!iface.interface.mode]]">
 			<div>[[_interfaceSummary(iface.interface)]]</div>
 			<interface-status system=[[iface.interface.system]]></interface-statusi-->
-			<a name="[[iface.name]]" href="/[[iface.name]]">Configure [[iface.name]]</a>
+			<div><a name="[[iface.name]]" href="/[[iface.name]]">Configure [[iface.name]]</a></div>
 		</template>
 	</template>
 
@@ -39,6 +40,14 @@
 						return "Wi-Fi";
 					default:
 						return type;
+				}
+			},
+			_humanMode(mode) {
+				switch (mode) {
+					case "ap":
+						return "access point";
+					default:
+						return mode;
 				}
 			},
 	 });
