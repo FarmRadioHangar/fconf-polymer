@@ -87,6 +87,7 @@
 					deviceList: Object.keys(interfaces).map(function(key) {
 						return {
 							name: key,
+							label: interfaces[key].uiLabel ? interfaces[key].uiLabel : key,
 							type: interfaces[key].type, //temp
 							interface: interfaces[key],
 						};
@@ -106,6 +107,7 @@
 				this.set('state.deviceList', Object.keys(interfaces).map(function(key) {
 					return {
 						name: key,
+						label: interfaces[key].uiLabel ? interfaces[key].uiLabel : key,
 						type: interfaces[key].type ? interfaces[key].type : "", //temp
 						interface: interfaces[key],
 					};
