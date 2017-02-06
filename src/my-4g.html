@@ -2,6 +2,7 @@
 <link rel="import" href="../bower_components/gold-ip-input/gold-ip-input.html">
 <link rel="import" href="../bower_components/uniflow-polymer/model-view.html">
 <link rel="import" href="shared-styles.html">
+<link rel="import" href="toggle-confirm-button.html">
 <link rel="import" href="ip-with-mask-input.html">
 
 <dom-module id="my-4g">
@@ -11,22 +12,35 @@
 				display: block;
 			}
 		</style>
-		ON/OFF
-		<paper-toggle-button disabled=[[!_ifaceUsable(status)]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(status, enabled)]]</paper-toggle-button>
-		<div class="card">
-			<template is="dom-if" if="[[status.isModified]]">
-				<div class="notification">You have unsaved changes</div>
-			</template>
-			<template is="dom-if" if="[[_isMode('ndis', mode)]]">
-				<h3>NDIS driver</h3>
-				<div><paper-checkbox checked={{model.dhcp}} disabled>DHCP client</paper-checkbox></div>
-			</template>
-			<div>
-				<paper-button raised on-tap="onSaveTap" disabled=[[!status.isModified]]>Apply changes</paper-button>
-				<paper-button raised on-tap="discardChanges" disabled=[[!status.isModified]]>Discard</paper-button>
-				<template is="dom-if" if="[[_hasDefaults(mode)]]">
-					<paper-button raised on-tap="loadDefaults">Load Defaults</paper-button>
+		<!-- wrapper div is used to fit toggle-confirm dialog -->
+		<div class="wrapper">
+			<hr/>
+			ON/OFF
+			<toggle-confirm-button
+				class="toggleEnabled"
+				timeout="3333"
+				disabled=[[!isUsable]]
+				on-confirmed-change="_enabledChanged"
+				checked="[[enabled]]" notify>
+					[[_ifaceStatus(isUsable, enabled)]]
+			</toggle-confirm-button>
+			<div class="card">
+				<template is="dom-if" if="[[status.isModified]]">
+					<div class="notification">You have unsaved changes</div>
 				</template>
+				<template is="dom-if" if="[[_isMode('ndis', mode)]]">
+					<h3>NDIS driver</h3>
+					<!--div><paper-checkbox checked={{model.dhcp}} disabled>DHCP client</paper-checkbox></div-->
+					<div><paper-checkbox checked=true disabled>DHCP client</paper-checkbox></div>
+				</template>
+				<div>
+					<paper-button raised on-tap="onSaveTap" disabled=[[!status.isModified]]>Apply changes</paper-button>
+					<paper-button raised on-tap="discardChanges" disabled=[[!status.isModified]]>Discard</paper-button>
+					<template is="dom-if" if="[[_hasDefaults(mode)]]">
+						<paper-button raised on-tap="loadDefaults" disabled=[[!_hasDefaults(mode)]]>Load Defaults</paper-button>
+					</template>
+					<paper-button raised on-tap="configRemove" disabled=[[!ndis.config]]>Delete</paper-button>
+				</div>
 			</div>
 		</div>
 	</template>
@@ -41,16 +55,13 @@
 			_isMode: function(val, mode) {
 				return mode === val;
 			},
-			_ifaceStatus: function(status, enabled) {
-				//console.log('_ifaceStatus:');
-				return (this._ifaceUsable(status) && enabled) ? "Enabled" : "Disabled";
-			},
-			_ifaceUsable: function(status) {
-				console.log('_ifaceUsable:', !!(status));
-				return !!(status);
+			_ifaceStatus: function(isUsable, enabled) {
+				return (isUsable && enabled) ? "Enabled" : "Disabled";
 			},
 			_hasDefaults: function(mode) {
-				return !!this.get(mode).defaults;
+				if (this.get([mode, 'defaults'])) {
+					return true;
+				} else return false;
 			},
 			onSaveTap() {
 				this.validateAndSave({
@@ -62,16 +73,18 @@
 			},
 			_enabledChanged: function (event, element) {
 				console.log('_enabledChanged', event, element);
-				this.emitAction({
-					type: 'interfaceEnable',
-					name: this.name,
-					enabled: element.value
-				});
-				setTimeout(function(value) {
-					if (value !== this.get('enabled')) {
-						this.set('enabled', this.get('enabled'));
-					}
-				}.bind(this), 3000, element.value);
+				if (element.value !== this.get('enabled')) {
+					this.emitAction({
+						type: 'interfaceEnable',
+						name: this.name,
+						enabled: element.value
+					});
+					setTimeout(function(value) {
+						if (value !== this.get('enabled')) {
+							this.set('enabled', this.get('enabled'));
+						}
+					}.bind(this), 3000, element.value);
+				}
 			},
 
 			behaviors: [
@@ -83,7 +96,14 @@
 				console.log('discardChanges', this.get('config'));
 				this.set('model', JSON.parse(this.get('_model')));
 			},
+			configRemove() {
+				this.emitAction({
+					type: 'configRemove',
+					name: this.name,
+				});
+			},
 			_configChanged(changeRecord) {
+				this.set('mode', 'ndis');
 				this.set('model', Object.assign( {}, this.ndis.config));
 				this.set('_model', JSON.stringify(this.model));
 				console.log('_configChanged', changeRecord.path, changeRecord.value, this.get('model'));
@@ -99,12 +119,17 @@
 				console.log(this.config, this.model, this.status);
 			},
 			properties: {
+				isUsable: {
+					type: Boolean,
+					computed: '_statusChanged(ndis.config, system)',
+					value: false,
+				},
 				ndis: {
 					type: Object,
 				},
-				sharing: {
-					type: Boolean,
-					value: false,
+				mode: {
+					type: String,
+//					value: "ndis",
 				},
 				enabled: {
 					type: Boolean,
@@ -113,7 +138,17 @@
 			},
 			observers: [
 				'_configChanged(ndis.*)',
+//				'_statusChanged(ndis.config.*, system)',
 			],
+			_statusChanged(changeRecord) {
+				console.log('_statusChanged', changeRecord);
+				if (this.system && this.get('ndis.config')) {
+//					this._setIsUsable(true);
+					return true;
+				} else {
+					return false;
+				}
+			},
 /*			validation: {
 				static: (value) => {
 					if (value.gateway && value.gateway.trim()) {

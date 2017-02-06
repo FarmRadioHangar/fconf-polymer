@@ -8,10 +8,10 @@
 
 		_modes: undefined,
 
-		_humanMode: function(mode) {
+		_humanMode(mode) {
 			return this._modes[mode];
 		},
-		_isMode: function(val, mode, selected) {
+		_isMode(val, mode, selected) {
 			return val === selected && this.get(val);
 		},
 		_modeChanged() {
@@ -23,11 +23,10 @@
 				observer: '_modeChanged',
 			},
 		},
-		created: function() {
-			this.observers = [];
+		created() {
+			// for each mode create function named like _someMode, to observe changes to mode, system and some.config
 			Object.keys(this._modes).forEach(function(key) {
 				this['_' + key + 'Mode'] = function() {
-					console.log('_' + key + 'Mode func');
 					if (this.get('mode') === key) {
 						this._setIsUsable(true);
 					}
