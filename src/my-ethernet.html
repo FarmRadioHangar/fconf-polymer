@@ -48,7 +48,7 @@
 					<template is="dom-if" if="[[_hasDefaults(defaults)]]">
 						<paper-button raised on-tap="loadDefaults">Load Defaults</paper-button>
 					</template>
-					<paper-button raised on-tap="configRemove" disabled=[[!_isRemovable(config, enabled)]]>Delete</paper-button>
+					<paper-button raised on-tap="configRemove" disabled="[[!_isRemovable(config, enabled)]]">Delete</paper-button>
 				</div>
 	</template>
 

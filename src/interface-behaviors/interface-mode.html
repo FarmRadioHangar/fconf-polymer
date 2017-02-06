@@ -101,7 +101,8 @@
 			return this.get('status.isModified') || (this.get('mode') !== this._ownMode);
 		},
 		_isRemovable(config, enabled) {
-			return !!config && !enabled;
+			console.log('_isRemovable', this.get('mode'), this._ownMode);
+			return !!config && (!enabled || this.get('mode') !== this._ownMode);
 		},
 		_hasDefaults(defaults) {
 			return !!defaults;
