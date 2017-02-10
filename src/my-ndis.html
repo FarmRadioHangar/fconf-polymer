@@ -1,0 +1,53 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/gold-ip-input/gold-ip-input.html">
+<link rel="import" href="../bower_components/uniflow-polymer/model-view.html">
+<link rel="import" href="interface-behaviors/interface-mode.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="toggle-confirm-button.html">
+
+<dom-module id="my-ndis">
+	<template>
+		<style include="shared-styles">
+			:host {
+				display: block;
+			}
+		</style>
+		<template is="dom-if" if="[[!config]]">
+			<span class="error">Not configured</span> &nbsp;
+		</template>
+		<template is="dom-if" if="[[isModified]]">
+			<span class="notification">You have unsaved changes</span>
+		</template>
+		<h3>NDIS driver</h3>
+			<div><paper-checkbox checked={{model.dhcp}} disabled>DHCP client</paper-checkbox></div>
+			<template is="dom-repeat" items="{{model.dns-servers}}" >
+				<gold-ip-input id="dns[[index]]" label="DNS [[_humanIndex(index)]]" value="{{item}}" auto-validate></gold-ip-input>
+			</template>
+		<div>
+			<paper-button raised on-tap="onSaveTap" disabled=[[!isModified]]>Apply changes</paper-button>
+			<paper-button raised on-tap="discardChanges" disabled=[[!isModified]]>Discard</paper-button>
+			<template is="dom-if" if="[[_hasDefaults(defaults)]]">
+				<paper-button raised on-tap="loadDefaults">Load Defaults</paper-button>
+			</template>
+			<paper-button raised on-tap="configRemove" disabled=[[!_isRemovable(config,enabled)]]>Delete</paper-button>
+		</div>
+	</template>
+
+	<script>
+		Polymer({
+			is: 'my-ndis',
+			_ownMode: 'ndis',
+
+			behaviors: [
+				FConf.InterfaceMode,
+			],
+			ready() {
+				this.set('model.dhcp', true);
+			},
+
+			_humanIndex(index) {
+				return index + 1;
+			},
+		});
+	</script>
+</dom-module>

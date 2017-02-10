@@ -1,9 +1,11 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/gold-ip-input/gold-ip-input.html">
 <link rel="import" href="../bower_components/uniflow-polymer/model-view.html">
+<link rel="import" href="interface-behaviors/interface-type.html">
+<link rel="import" href="interface-behaviors/switch-modes.html">
 <link rel="import" href="shared-styles.html">
 <link rel="import" href="toggle-confirm-button.html">
-<link rel="import" href="ip-with-mask-input.html">
+<link rel="import" href="my-ndis.html">
 
 <dom-module id="my-4g">
 	<template>
@@ -24,24 +26,20 @@
 				checked="[[enabled]]" notify>
 					[[_ifaceStatus(isUsable, enabled)]]
 			</toggle-confirm-button>
-			<div class="card">
-				<template is="dom-if" if="[[status.isModified]]">
-					<div class="notification">You have unsaved changes</div>
-				</template>
-				<template is="dom-if" if="[[_isMode('ndis', mode)]]">
-					<h3>NDIS driver</h3>
-					<!--div><paper-checkbox checked={{model.dhcp}} disabled>DHCP client</paper-checkbox></div-->
-					<div><paper-checkbox checked=true disabled>DHCP client</paper-checkbox></div>
-				</template>
-				<div>
-					<paper-button raised on-tap="onSaveTap" disabled=[[!status.isModified]]>Apply changes</paper-button>
-					<paper-button raised on-tap="discardChanges" disabled=[[!status.isModified]]>Discard</paper-button>
-					<template is="dom-if" if="[[_hasDefaults(mode)]]">
-						<paper-button raised on-tap="loadDefaults" disabled=[[!_hasDefaults(mode)]]>Load Defaults</paper-button>
+			<template is="dom-if" if="[[_selected]]">
+				<div class="card">
+					<template is="dom-if" if="[[_isMode('ndis', ndis, _selected)]]">
+						<my-ndis
+							name=[[name]]
+							enabled=[[enabled]]
+							config=[[ndis.config]]
+							defaults=[[ndis.defaults]]
+							selected={{_selected}}
+							mode=[[mode]]>
+						</my-ndis>
 					</template>
-					<paper-button raised on-tap="configRemove" disabled=[[!ndis.config]]>Delete</paper-button>
 				</div>
-			</div>
+			</template>
 		</div>
 	</template>
 
@@ -49,114 +47,16 @@
 		Polymer({
 			is: 'my-4g',
 
-			_humanIndex(index) {
-				return index + 1;
+			_modes: {
+				ndis: "NDIS"
 			},
-			_isMode: function(val, mode) {
-				return mode === val;
-			},
-			_ifaceStatus: function(isUsable, enabled) {
-				return (isUsable && enabled) ? "Enabled" : "Disabled";
-			},
-			_hasDefaults: function(mode) {
-				if (this.get([mode, 'defaults'])) {
-					return true;
-				} else return false;
-			},
-			onSaveTap() {
-				this.validateAndSave({
-					type: 'interfaceUpdate',
-					name: this.name,
-					enabled: this.enabled,
-					mode: 'ndis',
-				});
-			},
-			_enabledChanged: function (event, element) {
-				console.log('_enabledChanged', event, element);
-				if (element.value !== this.get('enabled')) {
-					this.emitAction({
-						type: 'interfaceEnable',
-						name: this.name,
-						enabled: element.value
-					});
-					setTimeout(function(value) {
-						if (value !== this.get('enabled')) {
-							this.set('enabled', this.get('enabled'));
-						}
-					}.bind(this), 3000, element.value);
-				}
-			},
-
 			behaviors: [
-				UniFlow.ModelView
+				FConf.InterfaceType,
+				FConf.SwitchModes,
 			],
-			//attached() {
-			//},
-			discardChanges() {
-				console.log('discardChanges', this.get('config'));
-				this.set('model', JSON.parse(this.get('_model')));
+			ready() {
+				this.set('_selected', 'ndis');
 			},
-			configRemove() {
-				this.emitAction({
-					type: 'configRemove',
-					name: this.name,
-				});
-			},
-			_configChanged(changeRecord) {
-				this.set('mode', 'ndis');
-				this.set('model', Object.assign( {}, this.ndis.config));
-				this.set('_model', JSON.stringify(this.model));
-				console.log('_configChanged', changeRecord.path, changeRecord.value, this.get('model'));
-			},
-			loadDefaults() {
-				if (this.ndis.defaults) {
-					this.set('model', this.ndis.defaults);
-					var _defaults = JSON.stringify(this.ndis.defaults);
-					if (this._model !== _defaults) {
-						this.set('status.isModified', true);
-					}
-				}
-				console.log(this.config, this.model, this.status);
-			},
-			properties: {
-				isUsable: {
-					type: Boolean,
-					computed: '_statusChanged(ndis.config, system)',
-					value: false,
-				},
-				ndis: {
-					type: Object,
-				},
-				mode: {
-					type: String,
-//					value: "ndis",
-				},
-				enabled: {
-					type: Boolean,
-//					value: false
-				}
-			},
-			observers: [
-				'_configChanged(ndis.*)',
-//				'_statusChanged(ndis.config.*, system)',
-			],
-			_statusChanged(changeRecord) {
-				console.log('_statusChanged', changeRecord);
-				if (this.system && this.get('ndis.config')) {
-//					this._setIsUsable(true);
-					return true;
-				} else {
-					return false;
-				}
-			},
-/*			validation: {
-				static: (value) => {
-					if (value.gateway && value.gateway.trim()) {
-						//check if address is in same network with the static-ip
-					}
-				}
-			},
-*/
 		});
 	</script>
 </dom-module>
