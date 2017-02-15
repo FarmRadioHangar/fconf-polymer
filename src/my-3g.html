@@ -1,13 +1,5 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/gold-ip-input/gold-ip-input.html">
-<link rel="import" href="../bower_components/paper-input/paper-input.html">
-<link rel="import" href="../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
-<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
-<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../bower_components/paper-radio-group/paper-radio-group.html">
-<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
-<link rel="import" href="../bower_components/uniflow-polymer/action-emitter.html">
 <link rel="import" href="interface-behaviors/interface-type.html">
 <link rel="import" href="interface-behaviors/switch-modes.html">
 <link rel="import" href="ras-3g.html">
@@ -23,52 +15,57 @@
 			}
 		</style>
 		<template is="dom-if" if="[[system]]">
-			IMEI: [[system.imei]]<br/>
-			[[system.tty]] [[system.ati]]
-			<blockquote>[[system.ati]]</blockquote>
+			<!-- todo: make modem info collapsable, showing only imei in collapsed state -->
+			<pre>[[system.modem]]</pre>
+			<!-- [[system.tty]] -->
 		</template>
-		<!-- wrapper div is used to fit toggle-confirm dialog -->
-		<div class="wrapper">
-			<hr/>
-			ON/OFF
-			<toggle-confirm-button
-				class="toggleEnabled"
-				timeout="3333"
-				disabled=[[!isUsable]]
-				on-confirmed-change="_enabledChanged"
-				checked="[[enabled]]" notify>
-					[[_ifaceStatus(isUsable, enabled)]] ([[_humanMode(mode)]] mode)
-			</toggle-confirm-button>
-			3G dongle mode:
-			<paper-radio-group selected="{{_selected}}" attr-for-selected="name">
-				<template is="dom-if" if="[[ras]]"><paper-radio-button name="ras">data</paper-radio-button></template>
-				<template is="dom-if" if="[[voice]]"><paper-radio-button name="voice">voice</paper-radio-button></template>
-			</paper-radio-group>
-			<template is="dom-if" if="[[_selected]]">
-				<div class="card">
-					<template is="dom-if" if="[[_isMode('ras', ras, _selected)]]">
-						<ras-3g
-							name=[[name]]
-							enabled=[[enabled]]
-							config=[[ras.config]]
-							defaults=[[ras.defaults]]
-							selected={{_selected}}
-							mode=[[mode]]>
-						</ras-3g>
-					</template>
-					<template is="dom-if" if="[[_isMode('voice', voice, _selected)]]">
-						<voice-channel
-							name="[[name]]"
-							enabled=[[enabled]]
-							config=[[voice.config]]
-							defaults=[[voice.defaults]]
-							selected={{_selected}}
-							mode=[[mode]]>
-						</voice-chennel>
-					</template>
-				</div>
-			</template>
-		</div>
+		<template is="dom-if" if="[[!_isConfigurable(system)]]">
+			<div class="error">No valid SIM card detected, nothing to configure</div>
+		</template>
+		<template is="dom-if" if="[[_isConfigurable(system,mode)]]">
+			<!-- wrapper div is used to fit toggle-confirm dialog -->
+			<div class="wrapper">
+				<hr/>
+				ON/OFF
+				<toggle-confirm-button
+					class="toggleEnabled"
+					timeout="6333"
+					disabled=[[!isUsable]]
+					on-confirmed-change="_enabledChanged"
+					checked="[[enabled]]" notify>
+						[[_ifaceStatus(isUsable, enabled)]] ([[_humanMode(mode)]] mode)
+				</toggle-confirm-button>
+				3G dongle mode:
+				<paper-radio-group selected="{{_selected}}" attr-for-selected="name">
+					<template is="dom-if" if="[[ras]]"><paper-radio-button name="ras">data (RAS)</paper-radio-button></template>
+					<template is="dom-if" if="[[voice]]"><paper-radio-button name="voice">voice</paper-radio-button></template>
+				</paper-radio-group>
+				<template is="dom-if" if="[[_selected]]">
+					<div class="card">
+						<template is="dom-if" if="[[_isMode('ras', ras, _selected)]]">
+							<ras-3g
+								name=[[name]]
+								enabled=[[enabled]]
+								config=[[ras.config]]
+								defaults=[[ras.defaults]]
+								selected={{_selected}}
+								mode=[[mode]]>
+							</ras-3g>
+						</template>
+						<template is="dom-if" if="[[_isMode('voice', voice, _selected)]]">
+							<voice-channel
+								name="[[name]]"
+								enabled=[[enabled]]
+								config=[[voice.config]]
+								defaults=[[voice.defaults]]
+								selected={{_selected}}
+								mode=[[mode]]>
+							</voice-chennel>
+						</template>
+					</div>
+				</template>
+			</div>
+		</template>
 	</template>
 
 	<script>
@@ -82,6 +79,9 @@
 				FConf.InterfaceType,
 				FConf.SwitchModes,
 			],
+			_isConfigurable(system, mode) {
+				return this.get('mode') || !system || system.imsi;
+			},
 		});
 	</script>
 </dom-module>

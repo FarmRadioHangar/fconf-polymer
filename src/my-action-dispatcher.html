@@ -1,4 +1,4 @@
-<link rel="import" href="../bower_components/uniflow-polymer/action-dispatcher.html">
+<link rel="import" href="uniflow-polymer/action-dispatcher.html">
 <link rel="import" href="../bower_components/web-socket/web-socket.html">
 
 <dom-module id="my-action-dispatcher">
@@ -88,7 +88,7 @@
 						return {
 							name: key,
 							label: interfaces[key].uiLabel ? interfaces[key].uiLabel : key,
-							type: interfaces[key].type, //temp
+							//type: interfaces[key].type, //temp
 							interface: interfaces[key],
 						};
 					})
@@ -108,7 +108,7 @@
 					return {
 						name: key,
 						label: interfaces[key].uiLabel ? interfaces[key].uiLabel : key,
-						type: interfaces[key].type ? interfaces[key].type : "", //temp
+						//type: interfaces[key].type ? interfaces[key].type : "", //temp
 						interface: interfaces[key],
 					};
 				}));

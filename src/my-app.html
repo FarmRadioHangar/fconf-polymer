@@ -20,8 +20,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
-<link rel="import" href="../bower_components/uniflow-polymer/application-state.html">
-<link rel="import" href="../bower_components/uniflow-polymer/state-mutator.html">
+<link rel="import" href="uniflow-polymer/application-state.html">
+<link rel="import" href="uniflow-polymer/state-mutator.html">
+<link rel="import" href="shared-styles.html">
 <link rel="import" href="my-icons.html">
 <link rel="import" href="my-action-dispatcher.html">
 <link rel="import" href="my-interface.html">
@@ -30,7 +31,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <dom-module id="my-app">
 	<template>
-		<style>
+		<style include="shared-styles">
 			:host {
 				--app-primary-color: #4285f4;
 				--app-secondary-color: black;
@@ -82,7 +83,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 				<iron-selector id="selector" selected="{{page}}" attr-for-selected="name" class="drawer-list" role="navigation">
 					<a name="summary" href="/summary">Summary</a>
 					<template is="dom-repeat" items="[[state.deviceList]]" as="iface">
-						<a name="[[iface.name]]" href="/[[iface.name]]">[[iface.label]] [[_humanType(iface.type)]]</a>
+						<a name="[[iface.name]]" href="/[[iface.name]]">
+							<!--template is="dom-if" if=[[!iface.interface.config]]>
+								<span title="Device not configured">*</span>
+							</template-->
+							<template is="dom-if" if=[[!iface.interface.system]]>
+								<span class="error" title="Device configured but not detected">*</span>
+							</template>
+							[[iface.label]] [[_humanType(iface.interface.type)]]
+						</a>
 					</template>
 				</iron-selector>
 			</app-drawer>

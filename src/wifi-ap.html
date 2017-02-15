@@ -38,7 +38,7 @@
 			<paper-listbox class="dropdown-content" selected="{{model.shared_interface}}" attr-for-selected="name">
 				<paper-item name="">none</paper-item>
 				<template is="dom-repeat" items=[[interfaces]]>
-					<paper-item name="[[item.name]]">[[item.name]] ([[item.type]])</paper-item>
+					<paper-item name="[[item.name]]">[[item.name]] ([[item.interface.type]])</paper-item>
 				</template>
 			</paper-listbox>
 		</paper-dropdown-menu>
