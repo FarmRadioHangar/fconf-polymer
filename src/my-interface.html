@@ -1,8 +1,8 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-radio-group/paper-radio-group.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
-<link rel="import" href="uniflow-polymer/state-aware.html">
-<link rel="import" href="uniflow-polymer/action-emitter.html">
+<link rel="import" href="../bower_components/uniflow-polymer/state-aware.html">
+<link rel="import" href="../bower_components/uniflow-polymer/action-emitter.html">
 <link rel="import" href="shared-styles.html">
 <link rel="import" href="my-ethernet.html">
 <link rel="import" href="my-wifi.html">
@@ -24,11 +24,11 @@
 					<div>mac: [[item.mac]]<br/> [[item.family]]: [[item.address]] / [[item.netmask]]</div>
 				</template>
 			</template>
-		<!--paper-toggle-button disabled=[[_ifaceUsable(status)]] on-checked-changed="_enabledChanged" checked="[[enabled]]" notify>[[_ifaceStatus(status, enabled)]]</paper-toggle-button-->
 			<template is="dom-if" if="[[system.properties]]">
 				<div>[[system.properties]],MTU=[[system.mtu]]</div>
 			</template>
 		</template>
+		<!-- todo: consider moving interface on/off switch here -->
 		<template is="dom-if" if="[[!system]]">
 			<div class="error">Device not detected by system</div>
 		</template>

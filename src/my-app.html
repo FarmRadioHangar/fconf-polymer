@@ -20,8 +20,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
-<link rel="import" href="uniflow-polymer/application-state.html">
-<link rel="import" href="uniflow-polymer/state-mutator.html">
+<link rel="import" href="../bower_components/uniflow-polymer/application-state.html">
+<link rel="import" href="../bower_components/uniflow-polymer/state-mutator.html">
 <link rel="import" href="shared-styles.html">
 <link rel="import" href="my-icons.html">
 <link rel="import" href="my-action-dispatcher.html">
@@ -129,18 +129,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			is: 'my-app',
 
 			ready: function() {
-			},
-
-			attached() {
-				/*
-				Object.keys(serverState.interfaces).forEach(function(key) {
-					var myPage = document.createElement('my-' + serverState.interfaces[key].type);
-					myPage.name = key;
-					myPage.statePath = "state.interfaces." + key;
-					this.$.pages.appendChild(myPage);
-				}.bind(this));
-				console.log('my-app-state', this.state);
-				*/
 			},
 
 			behaviors: [

@@ -22,7 +22,7 @@
 		<template is="dom-if" if="[[!_isConfigurable(system)]]">
 			<div class="error">No valid SIM card detected, nothing to configure</div>
 		</template>
-		<template is="dom-if" if="[[_isConfigurable(system,mode)]]">
+		<template is="dom-if" if="[[_isConfigurable(system)]]">
 			<!-- wrapper div is used to fit toggle-confirm dialog -->
 			<div class="wrapper">
 				<hr/>
