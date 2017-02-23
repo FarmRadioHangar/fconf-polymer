@@ -19,13 +19,17 @@
 		</style>
 		<h1>Configure [[_interfaceType(interfaceType)]] interface [[name]]</h1>
 		<template is="dom-if" if="[[system]]">
-			<template is="dom-if" if="[[system.addresses]]">
-				<template is="dom-repeat" items="[[system.addresses]]">
-					<div>mac: [[item.mac]]<br/> [[item.family]]: [[item.address]] / [[item.netmask]]</div>
-				</template>
-			</template>
 			<template is="dom-if" if="[[system.properties]]">
 				<div>[[system.properties]],MTU=[[system.mtu]]</div>
+			</template>
+			<template is="dom-if" if="[[system.addresses]]">
+				<div><span class="label">mac:</span> <span class="value">[[system.addresses.0.mac]]</span></div>
+				<span class="label">Assigned addresses:</span>
+				<div>
+					<template is="dom-repeat" items="[[system.addresses]]">
+						<span class="label">[[item.family]]:</span> <span class="value"> [[item.address]] / [[item.netmask]]</span><br/>
+					</template>
+				</div>
 			</template>
 		</template>
 		<!-- todo: consider moving interface on/off switch here -->
@@ -45,16 +49,15 @@
 			<my-3g name="[[name]]" mode=[[mode]] ras=[[ras]] voice=[[voice]] enabled=[[enabled]] system=[[system]]></my-3g>
 		</template>
 		<template is="dom-if" if="[[!interfaceType]]">
-			Unknown interface, please specify type <paper-radio-group selected="{{_selected}}">
-				<paper-radio-button name="ethernet">Ethernet</paper-radio-button>
-				<paper-radio-button name="wifi">Wi-Fi</paper-radio-button>
-				<paper-radio-button name="4g">4g modem</paper-radio-button>
-				<paper-radio-button name="3g">3g modem</paper-radio-button>
-			</paper-radio-group>
-		<div>
-			<paper-button raised on-tap="onSaveTap" disabled=[[!_selected]]>Update</paper-button>
-		</div>
-
+			<div>
+				Unknown interface, please specify type <paper-radio-group selected="{{_selected}}">
+					<paper-radio-button name="ethernet">Ethernet</paper-radio-button>
+					<paper-radio-button name="wifi">Wi-Fi</paper-radio-button>
+					<paper-radio-button name="4g">4g modem</paper-radio-button>
+					<paper-radio-button name="3g">3g modem</paper-radio-button>
+				</paper-radio-group>
+				<paper-button raised on-tap="onSaveTap" disabled=[[!_selected]]>Update</paper-button>
+			</div>
 		</template>
 
 	</template>
