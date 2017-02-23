@@ -12,18 +12,23 @@
 			}
 		</style>
 		<h1>Interface summary</h1>
-		<template is="dom-repeat" items="[[interfaces]]" as="iface">
+		<template is="dom-repeat" items="[[interfaces]]">
 			<hr/>
-			<strong>[[_humanType(iface.interface.type)]] [[_humanMode(iface.interface.mode)]]</strong>
+			<strong>[[_humanType(item.interface.type)]] [[_humanMode(item.interface.mode)]]</strong>
 			<h2>[[iface.name]]</h2>
-			[[iface.interface.system.properties]]
-			<template is="dom-repeat" items="[[iface.interface.system.addresses]]">
-				<div>mac: [[item.mac]]<br/> [[item.family]]: [[item.address]] / [[item.netmask]]</div>
+			<template is="dom-if" if="[[item.interface.system.properties]]">
+				<div>[[item.interface.system.properties]],MTU=[[item.interface.system.mtu]]</div>
 			</template>
-			<!--template is="dom-if" if="[[!iface.interface.mode]]">
-			<div>[[_interfaceSummary(iface.interface)]]</div>
-			<interface-status system=[[iface.interface.system]]></interface-statusi-->
-			<div><a name="[[iface.name]]" href="/[[iface.name]]">Configure [[iface.name]]</a></div>
+			<template is="dom-if" if="[[item.interface.system.addresses]]">
+				<div><span class="label">mac:</span> <span class="value">[[item.interface.system.addresses.0.mac]]</span></div>
+				<!-- span class="label">Assigned addresses:</span-->
+				<div>
+					<template is="dom-repeat" items="[[item.interface.system.addresses]]" as="address">
+						<span class="label">[[address.family]]:</span> <span class="value"> [[address.address]] / [[address.netmask]]</span><br/>
+					</template>
+				</div>
+			</template>
+			<div><a name="[[item.name]]" href="/[[item.name]]">Configure [[item.name]]</a></div>
 		</template>
 	</template>
 
