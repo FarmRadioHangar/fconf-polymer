@@ -84,14 +84,7 @@
 			_interfaceInit(interfaces) {
 				this.set('state', {
 					interfaces: interfaces,
-					deviceList: Object.keys(interfaces).map(function(key) {
-						return {
-							name: key,
-							label: interfaces[key].uiLabel ? interfaces[key].uiLabel : key,
-							//type: interfaces[key].type, //temp
-							interface: interfaces[key],
-						};
-					})
+					deviceList: createDeviceList(interfaces),
 				});
 				console.log('initial state', this.get('state'));
 			},
@@ -103,15 +96,7 @@
 						delete this.state.interfaces[key];
 					}
 				}.bind(this));
-				interfaces = this.get('state.interfaces');
-				this.set('state.deviceList', Object.keys(interfaces).map(function(key) {
-					return {
-						name: key,
-						label: interfaces[key].uiLabel ? interfaces[key].uiLabel : key,
-						//type: interfaces[key].type ? interfaces[key].type : "", //temp
-						interface: interfaces[key],
-					};
-				}));
+				this.set('state.deviceList', createDeviceList(this.get('state.interfaces')));
 			},
 			_interfaceEnable(interfaces) {
 				Object.keys(interfaces).forEach(function(key) {
@@ -119,6 +104,19 @@
 				}.bind(this));
 			},
 		});
+		var createDeviceList = function(interfaces) {
+			return Object.keys(interfaces).map(function(key) {
+				return {
+					name: key,
+					label: interfaces[key].uiLabel ? interfaces[key].uiLabel : key,
+					//type: interfaces[key].type, //temp
+					interface: interfaces[key],
+				};
+			// if sorting is enabled, iron-pages get crazy when new interface appears
+			//}).sort(function(a, b) {
+			//	return a.name > b.name;
+			});
+		};
 	</script>
 </dom-module>
 
