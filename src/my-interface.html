@@ -40,7 +40,7 @@
 			<my-ethernet name="[[name]]" config=[[config]] enabled=[[enabled]] defaults=[[defaults]] system=[[system]]></my-ethernet>
 		</template>
 		<template is="dom-if" if="[[_isType('wifi', interfaceType)]]">
-			<my-wifi name="[[name]]" mode=[[mode]] ap=[[ap]] client=[[client]] enabled=[[enabled]] interfaces=[[_filterCurrentInterface(state.deviceList)]] system=[[system]]></my-wifi>
+			<my-wifi name="[[name]]" mode=[[mode]] ap=[[ap]] client=[[client]] enabled=[[enabled]] interfaces=[[state.deviceList]] system=[[system]]></my-wifi>
 		</template>
 		<template is="dom-if" if="[[_isType('4g', interfaceType)]]">
 			<my-4g name="[[name]]" mode=[[mode]] ndis=[[ndis]] enabled=[[enabled]] system=[[system]]></my-4g>
@@ -75,18 +75,6 @@
 						return "Wi-Fi";
 					default:
 						return type;
-				}
-			},
-			_filterCurrentInterface(interfaces) {
-				console.log('filter interfaces', interfaces);
-				if (interfaces) {
-					var filtered = [];
-					interfaces.forEach(function(iface) {
-						if (iface.name !== this.name && iface.interface.mode !== 'ap') {
-							filtered.push(iface);
-						}
-					}.bind(this));
-					return filtered;
 				}
 			},
 			_isType(type, value) {
